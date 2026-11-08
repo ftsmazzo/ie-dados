@@ -11,7 +11,7 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 1 | Municípios + população | `data/raw/ibge/municipios/` e `data/raw/ibge/populacao/` | IBGE | `id_municipio` (7 dígitos) | **pronta** |
 | 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
-| 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **aguardando download (P0)** |
+| 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **carregado P0** (`ref.pib_municipio` 77.965 / `ref.idhm_municipio` 16.643) |
 | 5 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
@@ -197,15 +197,16 @@ Raiz: `C:\Users\anjo_\OneDrive\Projetos-FabriaIA\ie-dados\`
 |---|--------|------|-------|-------|
 | **1 (obrigatório)** | PIB municipal IBGE 2010–2023 (TXT) | https://ftp.ibge.gov.br/Pib_Municipios/2022_2023/base/base_de_dados_2010_2023_txt.zip | `data/raw/ibge/pib_municipios/` | ~7,4 MB |
 | 1b (opcional) | mesma base em XLSX | https://ftp.ibge.gov.br/Pib_Municipios/2022_2023/base/base_de_dados_2010_2023_xlsx.zip | `data/raw/ibge/pib_municipios/` | ~20 MB |
-| **2 (obrigatório)** | IDHM municipal Atlas (Censo 1991/2000/2010) | Baixe no [Acervo Atlas Brasil](https://www.atlasbrasil.org.br/acervo/atlas) **ou** [dados.gov.br/Atlas](https://dados.gov.br/dados/conjuntos-dados/atlasbrasil) (recurso Censo municípios) | `data/raw/atlas/idhm/` | varia |
+| **2 (obrigatório)** | IDHM municipal | Espelhos CSV em `data/raw/atlas/idhm/` (biblioteca Atlas e OneDrive dados.gov falham; ver README da pasta). Oficial opcional: [dados.gov.br/Atlas](https://dados.gov.br/dados/conjuntos-dados/atlasbrasil) → **Censo Demográfico (1991, 2000 e 2010)** | `data/raw/atlas/idhm/` | ~1 MB CSV |
 
 Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/economicas/contas-nacionais/9088-produto-interno-bruto-dos-municipios.html)
 
-### Depois dos arquivos (nós)
+### Status P0 (feito)
 
-1. Inventariar colunas (código município IBGE 7 dígitos, PIB, PIB per capita, VABs; IDHM + dimensões)
-2. Schema `ref` + carga + validação vs 5.571 municípios
-3. MCP: domínio/indicadores + join em `correlate`
+1. Inventário + `sql/006_socioeconomico.sql`
+2. `scripts/prepare_socioeconomico.py` + `scripts/load_socioeconomico.py`
+3. Validação: PIB 2010–2023 (5.570 mun em 2023); IDHM 2010=5.565 / 2000=5.539 / 1991=5.539; órfãos=0
+4. **Próximo:** MCP métricas `get_indicadores` / `correlate` com PIB per capita e IDHM
 
 ## Notas
 

@@ -151,6 +151,40 @@ def build_server() -> MCPServer:
         )
 
     @mcp.tool(
+        name="get_pib",
+        description=geo_tools.get_pib.__doc__ or "PIB municipal IBGE.",
+    )
+    def get_pib(
+        id_municipio: str | None = None,
+        sigla_uf: str | None = None,
+        ano: int = 2021,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        return geo_tools.get_pib(
+            id_municipio=id_municipio,
+            sigla_uf=sigla_uf,
+            ano=ano,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="get_idhm",
+        description=geo_tools.get_idhm.__doc__ or "IDHM municipal Atlas.",
+    )
+    def get_idhm(
+        id_municipio: str | None = None,
+        sigla_uf: str | None = None,
+        ano: int = 2010,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        return geo_tools.get_idhm(
+            id_municipio=id_municipio,
+            sigla_uf=sigla_uf,
+            ano=ano,
+            limit=limit,
+        )
+
+    @mcp.tool(
         name="election_estimate",
         description=election_tools.election_estimate.__doc__
         or "Estima tamanho da agregação.",

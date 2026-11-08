@@ -27,6 +27,8 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | describe_domain | cheap | um domínio por vez |
 | resolve_municipio | cheap | nome/UF/código |
 | get_populacao | cheap | exige município ou UF |
+| get_pib | cheap | PIB municipal IBGE; exige município ou UF; ano 2010–2023 |
+| get_idhm | cheap | IDHM Atlas; exige município ou UF; ano 1991/2000/2010 |
 | election_estimate | cheap | antes de agregações amplas |
 | election_aggregate | heavy | `group_by` + `metrics` obrigatórios |
 | finance_estimate | cheap | antes de agregações de receita/despesa |
