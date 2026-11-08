@@ -9,7 +9,7 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | # | Domínio | Pasta raw | Fonte | Chave(s) | Status |
 |---|---------|-----------|-------|----------|--------|
 | 1 | Municípios + população | `data/raw/ibge/municipios/` e `data/raw/ibge/populacao/` | IBGE | `id_municipio` (7 dígitos) | **pronta** |
-| 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **P0+P1 ok · próximo P2: municipais 2024–2000** |
+| 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
 | 3 | Financiamento / dinheiro | `data/raw/tse/prestacao/` | TSE | a definir com base 1–2 | aguardando ZIP |
 | 4 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
@@ -40,11 +40,24 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | População mínima | 854 (> 0) |
 | Chaves DTB ∩ população | 100% |
 
-## Base 2 — Urnas / município + zona (escopo ampliado)
+## Base 2 — Urnas / município + zona (pronta)
 
 - **Objetivo:** série temporal longa para estudar **alternância**, tempo de partido no poder e padrões territoriais, com granularidade **município + zona**
-- **Por que 2026 entra:** a eleição geral de 2026 já está publicada no [portal TSE](https://dadosabertos.tse.jus.br/pt_BR/dataset/resultados-2026) (ZIPs mun/zona HTTP 200; votação ~443 MB). A onda anterior (só 2022+2024) foi conservadora demais — corrigido.
-- **Não nesta base ainda:** Boletim de Urna (máquina) nem seção; classificação ideológica esquerda/direita (camada curada depois, não vem do TSE)
+- **Tabelas:** `ref.municipio_tse`, `eleitoral.detalhe_munzona`, `eleitoral.votacao_candidato_munzona` (particionada por ano)
+- **Scripts:** `scripts/load_eleitoral.py` · **SQL:** `sql/002_eleitoral.sql`
+- **Não nesta base ainda:** Boletim de Urna (máquina) nem seção; classificação ideológica esquerda/direita (camada curada depois)
+
+### Validação (carga em produção)
+
+| Checagem | Resultado |
+|----------|-----------|
+| Cruzamento TSE↔IBGE | 5.571 (0 sem `ref.municipio`) |
+| Detalhe mun/zona | 306.435 |
+| Detalhe sem IBGE | 4 (casos especiais / exterior) |
+| Votação candidato mun/zona | **45.317.438** |
+| Votação sem IBGE | 60 |
+| Anos na votação | **15** (1998–2026) |
+| Inventário ZIP raw | 30/30 |
 
 ### Escopo temporal (verificado no CDN)
 

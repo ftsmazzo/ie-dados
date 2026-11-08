@@ -4,26 +4,31 @@ Schemas versionados em `sql/`.
 
 ## Convenções
 
-- Identificador de município: `id_municipio` `CHAR(7)` (IBGE)
-- UF: `sigla_uf` `CHAR(2)`
-- Anos: `ano` `INTEGER`
-- Timestamps de carga: `loaded_at TIMESTAMPTZ DEFAULT now()`
-- Schema `ref`: referência geográfica/populacional
-- Próximos: `eleitoral`, etc.
+- Identificador IBGE: `id_municipio` `CHAR(7)`
+- Código TSE do município: `cd_municipio_tse` `INTEGER`
+- UF: `sigla_uf` / `sg_uf` `CHAR(2)`
+- Schema `ref`: referência geográfica/populacional + cruzamentos
+- Schema `eleitoral`: resultados município + zona
 
 ## Arquivos
 
 | Arquivo | Domínio | Status |
 |---------|---------|--------|
 | `sql/000_extensions.sql` | extensões | ativo |
-| `sql/001_ref_municipios.sql` | municípios + população | ativo em produção |
+| `sql/001_ref_municipios.sql` | municípios + população | ativo |
+| `sql/002_eleitoral.sql` | cruzamento TSE/IBGE + detalhe + votação | ativo |
 
-## Tabelas ativas
+## Tabelas
 
-### `ref.municipio`
+### `ref.municipio` / `ref.populacao_municipio`
+Base 1 (IBGE).
 
-PK `id_municipio`. Inclui UF, regiões geográficas intermediária/imediata (DTB 2025).
+### `ref.municipio_tse`
+Cruzamento oficial `CD_MUNICIPIO_TSE` → `id_municipio` IBGE.
 
-### `ref.populacao_municipio`
+### `eleitoral.detalhe_munzona`
+Aptos, comparecimento, brancos, nulos por município/zona/cargo/turno/ano.
 
-PK (`id_municipio`, `ano`). FK para `ref.municipio`. Estimativa IBGE 2024 (referência 01/07/2024).
+### `eleitoral.votacao_candidato_munzona`
+Votos nominais (particionada por `ano_eleicao`, 1998–2026).
+Colunas essenciais: município TSE/IBGE, zona, cargo, candidato, partido, votos, situação.
