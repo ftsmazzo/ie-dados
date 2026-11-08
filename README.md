@@ -34,7 +34,16 @@ Ver [docs/BASES.md](docs/BASES.md).
 
 - EasyPanel: projeto `ie-dados` na Fábrica-IA
 - Postgres: serviço `postgres`, database `iedados`
+- Base 1 carregada: `ref.municipio` + `ref.populacao_municipio` (5.571 municípios)
 - MCP: ainda não implantado
+
+### Recarregar Base 1 (local)
+
+```bash
+python scripts/prepare_ref_ibge.py
+# DATABASE_URL apontando para o Postgres do projeto
+python scripts/load_ref_ibge.py
+```
 
 ## Colaboração com dados
 
