@@ -11,7 +11,8 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 1 | Municípios + população | `data/raw/ibge/municipios/` e `data/raw/ibge/populacao/` | IBGE | `id_municipio` (7 dígitos) | **pronta** |
 | 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
-| 4 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
+| 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **aguardando download (P0)** |
+| 5 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
 
@@ -180,6 +181,31 @@ Portais: [2026](https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-elei
 2. Schema `financeiro` (ou `eleitoral` + tabelas de prestação) + ligar a `sq_candidato` / município
 3. Carga + validação de totais
 4. Tools MCP `finance_estimate` / `finance_aggregate` (mesmo padrão anti-token)
+
+## Base 4 — Indicadores socioeconômicos municipais (em andamento)
+
+- **Objetivo:** cruzar **voto × dinheiro × desenvolvimento** no mesmo `id_municipio`
+- **Tabelas previstas:** `ref.pib_municipio`, `ref.idhm_municipio` (schema depois do inventário)
+- **MCP previsto:** métricas em `get_indicadores` / `correlate` com PIB per capita e IDHM
+- **Fora do P0:** SIDRA automático, indicadores anuais extras do Atlas, Senado
+
+### P0 — baixar agora (link → pasta)
+
+Raiz: `C:\Users\anjo_\OneDrive\Projetos-FabriaIA\ie-dados\`
+
+| # | O quê | Link | Pasta | ~tam. |
+|---|--------|------|-------|-------|
+| **1 (obrigatório)** | PIB municipal IBGE 2010–2023 (TXT) | https://ftp.ibge.gov.br/Pib_Municipios/2022_2023/base/base_de_dados_2010_2023_txt.zip | `data/raw/ibge/pib_municipios/` | ~7,4 MB |
+| 1b (opcional) | mesma base em XLSX | https://ftp.ibge.gov.br/Pib_Municipios/2022_2023/base/base_de_dados_2010_2023_xlsx.zip | `data/raw/ibge/pib_municipios/` | ~20 MB |
+| **2 (obrigatório)** | IDHM municipal Atlas (Censo 1991/2000/2010) | Baixe no [Acervo Atlas Brasil](https://www.atlasbrasil.org.br/acervo/atlas) **ou** [dados.gov.br/Atlas](https://dados.gov.br/dados/conjuntos-dados/atlasbrasil) (recurso Censo municípios) | `data/raw/atlas/idhm/` | varia |
+
+Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/economicas/contas-nacionais/9088-produto-interno-bruto-dos-municipios.html)
+
+### Depois dos arquivos (nós)
+
+1. Inventariar colunas (código município IBGE 7 dígitos, PIB, PIB per capita, VABs; IDHM + dimensões)
+2. Schema `ref` + carga + validação vs 5.571 municípios
+3. MCP: domínio/indicadores + join em `correlate`
 
 ## Notas
 
