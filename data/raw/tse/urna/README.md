@@ -1,15 +1,18 @@
 # Base 2 — Resultados TSE (município + zona)
 
-Coloque os ZIPs oficiais nas subpastas por ano e tipo de arquivo.
-Não extrair ainda é ok: o ZIP inteiro basta; a extração fica no ETL.
+Série **1998–2026** (gerais + municipais). Coloque os ZIPs nas pastas `AAAA/votacao_candidato_munzona/` e `AAAA/detalhe_votacao_munzona/`.
 
-## Onda 1 (baixar agora)
+## Prioridade
 
-| Arquivo | Pasta destino |
-|---------|---------------|
-| `votacao_candidato_munzona_2022.zip` | `2022/votacao_candidato_munzona/` |
-| `detalhe_votacao_munzona_2022.zip` | `2022/detalhe_votacao_munzona/` |
-| `votacao_candidato_munzona_2024.zip` | `2024/votacao_candidato_munzona/` |
-| `detalhe_votacao_munzona_2024.zip` | `2024/detalhe_votacao_munzona/` |
+1. **P0:** 2026, 2022, 2018, 2014  
+2. **P1:** 2010, 2006, 2002, 1998  
+3. **P2:** 2024, 2020, 2016, 2012, 2008, 2004, 2000  
 
-Links diretos: ver `docs/BASES.md` seção Base 2.
+## URL
+
+```
+https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_AAAA.zip
+https://cdn.tse.jus.br/estatistica/sead/odsele/detalhe_votacao_munzona/detalhe_votacao_munzona_AAAA.zip
+```
+
+Detalhes e validação de 2026: `docs/BASES.md`.
