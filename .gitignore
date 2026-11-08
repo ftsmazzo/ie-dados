@@ -1,10 +1,18 @@
 # Dados brutos e processados (ZIPs e derivados ficam fora do Git)
-data/raw/**
+# Negacoes precisam reabrir diretorios pai antes dos README
+data/raw/*
 !data/raw/.gitkeep
-!data/raw/**/README.md
-data/processed/**
+!data/raw/ibge/
+data/raw/ibge/*
+!data/raw/ibge/municipios/
+!data/raw/ibge/populacao/
+data/raw/ibge/municipios/*
+!data/raw/ibge/municipios/README.md
+data/raw/ibge/populacao/*
+!data/raw/ibge/populacao/README.md
+
+data/processed/*
 !data/processed/.gitkeep
-!data/processed/**/README.md
 
 # Secrets e ambiente
 .env
