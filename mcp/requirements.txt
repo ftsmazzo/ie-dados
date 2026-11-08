@@ -1,0 +1,4 @@
+mcp>=1.6.0,<3
+psycopg2-binary>=2.9.9
+uvicorn>=0.30.0
+starlette>=0.37.0

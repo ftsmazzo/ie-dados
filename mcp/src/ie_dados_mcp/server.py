@@ -1,0 +1,245 @@
+from __future__ import annotations
+
+import os
+import secrets
+from typing import Any, Callable
+
+from mcp.server.mcpserver import MCPServer
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse, PlainTextResponse, Response
+from starlette.types import ASGIApp
+
+from ie_dados_mcp import db
+from ie_dados_mcp.tools import artifacts as art_tools
+from ie_dados_mcp.tools import catalog as catalog_tools
+from ie_dados_mcp.tools import election as election_tools
+from ie_dados_mcp.tools import geo as geo_tools
+
+
+def _mcp_token() -> str:
+    token = os.environ.get("MCP_TOKEN", "").strip()
+    if not token:
+        token = secrets.token_urlsafe(32)
+        os.environ["MCP_TOKEN"] = token
+        print(
+            "WARNING: MCP_TOKEN não definido; gerado efêmero para este processo",
+            flush=True,
+        )
+    return token
+
+
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    """Exige Authorization: Bearer <MCP_TOKEN> em /mcp*; libera /health*."""
+
+    def __init__(self, app: ASGIApp, token: str) -> None:
+        super().__init__(app)
+        self.token = token
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        path = request.url.path
+        if path.startswith("/health"):
+            return await call_next(request)
+        auth = request.headers.get("authorization", "")
+        if not auth.lower().startswith("bearer "):
+            return JSONResponse({"error": "missing_bearer"}, status_code=401)
+        got = auth.split(" ", 1)[1].strip()
+        if not secrets.compare_digest(got, self.token):
+            return JSONResponse({"error": "invalid_token"}, status_code=401)
+        return await call_next(request)
+
+
+def build_server() -> MCPServer:
+    mcp = MCPServer(
+        name="ie-dados",
+        title="IE Dados MCP",
+        description=(
+            "Consulta tipada e agregada da base ie-dados (municípios, população, "
+            "resultados eleitorais mun/zona). Sem SQL livre. Sempre estime antes de agregar."
+        ),
+        instructions=(
+            "Fluxo obrigatório sugerido: list_domains → describe_domain → "
+            "resolve_municipio → election_estimate → election_aggregate. "
+            "Se a resposta vier com artifact_id, use artifact_get. "
+            "Nunca peça dump cru de votacao_candidato_munzona."
+        ),
+        version="0.1.0",
+    )
+
+    @mcp.custom_route("/health", methods=["GET"])
+    async def health(_request: Request) -> PlainTextResponse:
+        return PlainTextResponse("ok")
+
+    @mcp.custom_route("/health/ready", methods=["GET"])
+    async def ready(_request: Request) -> JSONResponse:
+        try:
+            db.fetch_one("SELECT 1 AS ok")
+            return JSONResponse({"status": "ready"})
+        except Exception as e:
+            return JSONResponse({"status": "error", "detail": str(e)}, status_code=503)
+
+    @mcp.tool(
+        name="list_domains",
+        description=catalog_tools.list_domains.__doc__ or "Lista domínios.",
+    )
+    def list_domains() -> dict[str, Any]:
+        return catalog_tools.list_domains()
+
+    @mcp.tool(
+        name="describe_domain",
+        description=catalog_tools.describe_domain.__doc__ or "Descreve um domínio.",
+    )
+    def describe_domain(domain_id: str) -> dict[str, Any]:
+        return catalog_tools.describe_domain(domain_id)
+
+    @mcp.tool(
+        name="resolve_municipio",
+        description=geo_tools.resolve_municipio.__doc__ or "Resolve município.",
+    )
+    def resolve_municipio(
+        nome: str | None = None,
+        sigla_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        limit: int = 10,
+    ) -> dict[str, Any]:
+        return geo_tools.resolve_municipio(
+            nome=nome,
+            sigla_uf=sigla_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="get_populacao",
+        description=geo_tools.get_populacao.__doc__ or "População municipal.",
+    )
+    def get_populacao(
+        id_municipio: str | None = None,
+        sigla_uf: str | None = None,
+        ano: int = 2024,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        return geo_tools.get_populacao(
+            id_municipio=id_municipio,
+            sigla_uf=sigla_uf,
+            ano=ano,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="election_estimate",
+        description=election_tools.election_estimate.__doc__
+        or "Estima tamanho da agregação.",
+    )
+    def election_estimate(
+        source: str = "votacao",
+        group_by: list[str] | None = None,
+        metrics: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        nr_zona: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+    ) -> dict[str, Any]:
+        if source not in ("votacao", "detalhe"):
+            raise ValueError("source deve ser 'votacao' ou 'detalhe'")
+        return election_tools.election_estimate(
+            source=source,  # type: ignore[arg-type]
+            group_by=group_by,
+            metrics=metrics,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            nr_zona=nr_zona,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+        )
+
+    @mcp.tool(
+        name="election_aggregate",
+        description=election_tools.election_aggregate.__doc__
+        or "Agrega resultados eleitorais.",
+    )
+    def election_aggregate(
+        source: str = "votacao",
+        group_by: list[str] | None = None,
+        metrics: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        nr_zona: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        max_rows: int | None = 50,
+        force_artifact: bool = False,
+    ) -> dict[str, Any]:
+        if source not in ("votacao", "detalhe"):
+            raise ValueError("source deve ser 'votacao' ou 'detalhe'")
+        return election_tools.election_aggregate(
+            source=source,  # type: ignore[arg-type]
+            group_by=group_by,
+            metrics=metrics,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            nr_zona=nr_zona,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            max_rows=max_rows,
+            force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="artifact_get",
+        description=art_tools.artifact_get.__doc__ or "Lê artefato intermediário.",
+    )
+    def artifact_get(
+        artifact_id: str,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        return art_tools.artifact_get(
+            artifact_id=artifact_id, offset=offset, limit=limit
+        )
+
+    return mcp
+
+
+def create_http_app():
+    """ASGI app com Bearer auth (para uvicorn / testes)."""
+    token = _mcp_token()
+    db.ensure_schema()
+    mcp = build_server()
+    app = mcp.streamable_http_app()
+    app.add_middleware(BearerAuthMiddleware, token=token)
+    return app
+
+
+def main() -> None:
+    import uvicorn
+
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "8000"))
+    # factory ensures middleware + schema init
+    uvicorn.run(
+        "ie_dados_mcp.server:create_http_app",
+        factory=True,
+        host=host,
+        port=port,
+        log_level=os.environ.get("LOG_LEVEL", "info"),
+    )
+
+
+if __name__ == "__main__":
+    main()
