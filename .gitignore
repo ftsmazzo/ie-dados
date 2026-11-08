@@ -1,0 +1,35 @@
+# Dados brutos e processados (ZIPs e derivados ficam fora do Git)
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+
+# Secrets e ambiente
+.env
+.env.*
+!.env.example
+*.local
+
+# Python / Node
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+dist/
+build/
+
+# IDE / SO
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs e temporários
+*.log
+tmp/
+temp/
+*.tmp
+*.zip
+!docs/**/*.zip
