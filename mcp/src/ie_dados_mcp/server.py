@@ -5,6 +5,7 @@ import secrets
 from typing import Any, Callable
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
@@ -15,6 +16,24 @@ from ie_dados_mcp.tools import artifacts as art_tools
 from ie_dados_mcp.tools import catalog as catalog_tools
 from ie_dados_mcp.tools import election as election_tools
 from ie_dados_mcp.tools import geo as geo_tools
+
+
+def _transport_security() -> TransportSecuritySettings:
+    """DNS rebinding: atrás de proxy + Bearer. Hosts extras via MCP_ALLOWED_HOSTS."""
+    raw = os.environ.get("MCP_ALLOWED_HOSTS", "").strip()
+    if not raw:
+        # BearerAuthMiddleware já protege /mcp*; Host check localhost quebraria o domínio público.
+        return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    hosts = [h.strip() for h in raw.split(",") if h.strip()]
+    origins: list[str] = []
+    for h in hosts:
+        base = h.split(":")[0]
+        origins.extend([f"https://{base}", f"http://{base}", f"https://{h}", f"http://{h}"])
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=hosts,
+        allowed_origins=origins,
+    )
 
 
 def _mcp_token() -> str:
@@ -221,7 +240,12 @@ def create_http_app():
     token = _mcp_token()
     db.ensure_schema()
     mcp = build_server()
-    app = mcp.streamable_http_app()
+    # host != localhost evita auto-enable de DNS rebinding só para 127.0.0.1
+    bind_host = os.environ.get("HOST", "0.0.0.0")
+    app = mcp.streamable_http_app(
+        host=bind_host,
+        transport_security=_transport_security(),
+    )
     app.add_middleware(BearerAuthMiddleware, token=token)
     return app
 
