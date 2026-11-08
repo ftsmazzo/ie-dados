@@ -60,7 +60,9 @@ App EasyPanel `ie-dados` / serviço `mcp`, build a partir de `/mcp` no repo.
 ### Exemplo de fluxo (Campinas / vereador 2022)
 
 1. `resolve_municipio` com `nome=Campinas`, `sigla_uf=SP` → `id_municipio=3509502`
-2. `election_estimate` com `ano_eleicao=2022`, `nr_turno=1`, `cd_cargo=7`, `id_municipio`, `group_by=["nr_partido"]`, `metrics=["votos"]`
+2. `election_estimate` com `ano_eleicao=2022`, `nr_turno=1`, `cd_cargo=7`, `id_municipio`, `group_by=["nr_partido"]`, `metrics=["sum_votos"]`
 3. `election_aggregate` com os mesmos filtros (`max_rows` ≤ 200)
+
+Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
 
 `cd_cargo` comuns: `1` Presidente, `3` Governador, `5` Senador, `6` Dep. Federal, `7` Dep. Estadual, `11` Prefeito, `13` Vereador.
