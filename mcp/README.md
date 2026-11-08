@@ -89,7 +89,8 @@ Rates em `detalhe`: `rate_nulos_sobre_validos`, `rate_brancos_sobre_validos`, `r
 2. `finance_estimate` `source=receita`, `ano_eleicao=2024`, `id_municipio`, `cd_cargo=13`, `group_by=["sg_partido"]`, `metrics=["sum_receita"]`
 3. `finance_aggregate` com os mesmos filtros
 
-Metrics: `sum_receita` / `sum_despesa`, `n_linhas`, `n_candidatos`.  
+Metrics: `sum_receita` / `sum_despesa` / `sum_pagto`, `n_linhas`, `n_candidatos`, `n_doadores`.  
+`source`: `receita` | `despesa` | `paga` | `doador` (paga/doador: filtre por `ano_eleicao` e/ou `sg_uf`).  
 Anos P0: 2018, 2020, 2022, 2024, 2026.
 
 `cd_cargo` comuns: `1` Presidente, `3` Governador, `5` Senador, `6` Dep. Federal, `7` Dep. Estadual, `11` Prefeito, `13` Vereador.

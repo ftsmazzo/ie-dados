@@ -240,8 +240,8 @@ def build_server() -> MCPServer:
         sg_partido: str | None = None,
         sq_candidato: int | None = None,
     ) -> dict[str, Any]:
-        if source not in ("receita", "despesa"):
-            raise ValueError("source: receita | despesa")
+        if source not in ("receita", "despesa", "paga", "doador"):
+            raise ValueError("source: receita | despesa | paga | doador")
         return finance_tools.finance_estimate(
             source=source,  # type: ignore[arg-type]
             group_by=group_by,
@@ -276,8 +276,8 @@ def build_server() -> MCPServer:
         max_rows: int | None = 50,
         force_artifact: bool = False,
     ) -> dict[str, Any]:
-        if source not in ("receita", "despesa"):
-            raise ValueError("source: receita | despesa")
+        if source not in ("receita", "despesa", "paga", "doador"):
+            raise ValueError("source: receita | despesa | paga | doador")
         return finance_tools.finance_aggregate(
             source=source,  # type: ignore[arg-type]
             group_by=group_by,

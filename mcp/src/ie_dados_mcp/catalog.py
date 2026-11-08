@@ -200,12 +200,41 @@ DOMAINS: dict[str, dict] = {
                     "vr_despesa_contratada",
                 ],
             },
+            "financeiro.despesa_paga_candidato": {
+                "description": (
+                    "Pagamentos (cash). Liga a contratada via sq_despesa. "
+                    "finance_aggregate source=paga. Sem id_municipio no CSV."
+                ),
+                "keys": ["ano_eleicao", "sq_despesa"],
+                "fields": [
+                    "ano_eleicao",
+                    "sg_uf",
+                    "ds_origem_despesa",
+                    "ds_natureza_despesa",
+                    "vr_pagto_despesa",
+                ],
+            },
+            "financeiro.receita_doador_originario": {
+                "description": (
+                    "Doador originário. Liga a receita via sq_receita. "
+                    "finance_aggregate source=doador."
+                ),
+                "keys": ["ano_eleicao", "sq_receita"],
+                "fields": [
+                    "ano_eleicao",
+                    "sg_uf",
+                    "tp_doador_originario",
+                    "nm_doador_originario",
+                    "vr_receita",
+                ],
+            },
         },
         "recommended_tools": ["finance_estimate", "finance_aggregate", "artifact_get"],
         "years_p0": [2018, 2020, 2022, 2024, 2026],
         "notes": [
             "Municipais (2020/2024): id_municipio preenchido via SG_UE TSE.",
             "Gerais (2018/2022/2026): id_municipio geralmente nulo — filtre UF/cargo/candidato.",
+            "source=paga|doador: filtre por ano_eleicao e/ou sg_uf.",
         ],
     },
 }

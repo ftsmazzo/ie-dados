@@ -117,12 +117,13 @@ Obs.: anos antigos (pré-2014) têm menos colunas / qualidade irregular — carr
 - **Scripts:** `scripts/load_prestacao.py` · **SQL:** `sql/004_financeiro.sql`
 - **MCP:** `finance_estimate` / `finance_aggregate` (domínio `financeiro`)
 - **Chave com Base 2:** `sq_candidato` + `ano_eleicao`
-- **Fora do P0 ainda:** despesas pagas, doador originário, órgãos partidários, extratos
+- **Extensão P0:** `despesa_paga_candidato`, `receita_doador_originario` (`sql/005_financeiro_ext.sql`)
+- **Fora do P0 ainda:** órgãos partidários, extratos, anos P1/P2
 
 ### Validação (carga P0 em produção)
 
-| Ano | Receitas | c/ IBGE | Despesas | c/ IBGE |
-|-----|----------|---------|----------|---------|
+| Ano | Receitas | c/ IBGE | Despesas contr. | c/ IBGE |
+|-----|----------|---------|-----------------|---------|
 | 2018 | 328.657 | 0 (geral) | 1.716.410 | 0 |
 | 2020 | 2.339.074 | 100% | 4.107.530 | 100% |
 | 2022 | 281.928 | 0 (geral) | 2.200.603 | 0 |
@@ -130,8 +131,14 @@ Obs.: anos antigos (pré-2014) têm menos colunas / qualidade irregular — carr
 | 2026 | 249.203 | 0 (geral) | 1.768.051 | 0 |
 | **Total** | **5.240.005** | | **14.246.021** | |
 
+| Tabela extensão | Linhas | Soma R$ |
+|-----------------|--------|---------|
+| `despesa_paga_candidato` | **12.830.799** | ~24,3 bi |
+| `receita_doador_originario` | **1.632.819** | ~0,77 bi |
+
 Smoke: Campinas 2024 vereador → 4.001 receitas / R$ 15,3 mi.  
-Join 2022 receita↔votação: 26.056 / 27.945 `sq_candidato` com voto.
+Join 2022 receita↔votação: 26.056 / 27.945 `sq_candidato` com voto.  
+MCP: `finance_aggregate` com `source=receita|despesa|paga|doador`.
 
 ### Prioridade de download
 

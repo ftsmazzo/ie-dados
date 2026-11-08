@@ -39,3 +39,7 @@ Colunas essenciais: município TSE/IBGE, zona, cargo, candidato, partido, votos,
 Base 3 (prestação TSE, particionadas por `ano_eleicao`).  
 Chave de ligação com Base 2: `sq_candidato` + `ano_eleicao`.  
 `id_municipio` preenchido quando `SG_UE` é código TSE municipal (eleições locais); em gerais costuma ser nulo (UE = UF).
+
+### `financeiro.despesa_paga_candidato` / `financeiro.receita_doador_originario`
+Extensão P0 (`sql/005_financeiro_ext.sql`).  
+Paga ↔ contratada via `sq_despesa`; doador ↔ receita via `sq_receita`.

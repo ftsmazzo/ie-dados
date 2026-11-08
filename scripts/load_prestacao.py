@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Carga Base 3 P0: receitas + despesas contratadas de candidatos (prestação TSE)."""
+"""Carga Base 3 P0: receitas, despesas contratadas/pagas e doador originário.
+
+Uso:
+  python scripts/load_prestacao.py                 # tudo, todos os anos P0
+  python scripts/load_prestacao.py 2024            # um ano, kinds default
+  python scripts/load_prestacao.py --kinds=pagas,doador 2020 2022
+Kinds: receita, despesa, pagas, doador (default: receita,despesa)
+"""
 
 from __future__ import annotations
 
@@ -15,7 +22,8 @@ from pathlib import Path
 import psycopg2
 
 ROOT = Path(__file__).resolve().parents[1]
-SQL = ROOT / "sql" / "004_financeiro.sql"
+SQL_CORE = ROOT / "sql" / "004_financeiro.sql"
+SQL_EXT = ROOT / "sql" / "005_financeiro_ext.sql"
 RAW = ROOT / "data" / "raw" / "tse" / "prestacao"
 YEARS = [2018, 2020, 2022, 2024, 2026]
 CHUNK = 200_000
@@ -23,9 +31,12 @@ CHUNK = 200_000
 SKIP_UF = {"BRASIL", "BR"}
 KIND_RECEITA = "receitas_candidatos"
 KIND_DESPESA = "despesas_contratadas_candidatos"
+KIND_PAGAS = "despesas_pagas_candidatos"
+KIND_DOADOR = "receitas_candidatos_doador_originario"
 NAME_RE = re.compile(
     r"^(?P<kind>.+)_(?P<year>\d{4})_(?P<uf>[A-Za-z]+)\.csv$", re.I
 )
+ALL_KINDS = ("receita", "despesa", "pagas", "doador")
 
 
 def _int(v):
@@ -43,7 +54,7 @@ def _int(v):
 def _txt(v):
     if v is None:
         return None
-    s = str(v).strip().strip('"')
+    s = str(v).replace("\x00", "").strip().strip('"')
     if s == "" or s.upper() in {"#NULO", "#NE"}:
         return None
     return s
@@ -132,7 +143,15 @@ def iter_kind_rows(zpath: Path, year: int, kind_prefix: str):
                 text = io.TextIOWrapper(raw, encoding="latin-1", newline="")
                 reader = csv.DictReader(text, delimiter=";")
                 for row in reader:
-                    yield {k.strip().strip('"'): v for k, v in row.items() if k}
+                    out = {}
+                    for k, v in row.items():
+                        if not k:
+                            continue
+                        key = k.strip().strip('"').replace("\x00", "")
+                        if isinstance(v, str):
+                            v = v.replace("\x00", "")
+                        out[key] = v
+                    yield out
 
 
 def flush_copy(cur, table: str, cols: str, buf: io.StringIO) -> None:
@@ -204,6 +223,90 @@ def load_receitas_year(cur, year: int, mapping: dict[int, str]) -> int:
     return total
 
 
+def load_pagas_year(cur, year: int) -> int:
+    zpath = find_zip(year)
+    part = f"financeiro.despesa_paga_candidato_{year}"
+    cur.execute(f"TRUNCATE {part}")
+    cols = """
+      ano_eleicao, nr_turno, cd_eleicao, sg_uf,
+      cd_fonte_despesa, ds_fonte_despesa, cd_origem_despesa, ds_origem_despesa,
+      cd_natureza_despesa, ds_natureza_despesa, sq_despesa, sq_parcelamento_despesa,
+      dt_pagto_despesa, ds_despesa, vr_pagto_despesa
+    """
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    total = 0
+    for row in iter_kind_rows(zpath, year, KIND_PAGAS):
+        w.writerow(
+            [
+                _int(row.get("AA_ELEICAO")) or year,
+                _int(row.get("ST_TURNO")),
+                _int(row.get("CD_ELEICAO")),
+                _txt(row.get("SG_UF")),
+                _int(row.get("CD_FONTE_DESPESA")),
+                _txt(row.get("DS_FONTE_DESPESA")),
+                _int(row.get("CD_ORIGEM_DESPESA")),
+                _txt(row.get("DS_ORIGEM_DESPESA")),
+                _int(row.get("CD_NATUREZA_DESPESA")),
+                _txt(row.get("DS_NATUREZA_DESPESA")),
+                _int(row.get("SQ_DESPESA")),
+                _int(row.get("SQ_PARCELAMENTO_DESPESA")),
+                _date(row.get("DT_PAGTO_DESPESA")),
+                _txt(row.get("DS_DESPESA")),
+                _money(row.get("VR_PAGTO_DESPESA")),
+            ]
+        )
+        total += 1
+        if total % CHUNK == 0:
+            flush_copy(cur, part, cols, buf)
+            buf = io.StringIO()
+            w = csv.writer(buf)
+            print(f"  paga {year}: {total} ...", flush=True)
+    flush_copy(cur, part, cols, buf)
+    return total
+
+
+def load_doador_year(cur, year: int) -> int:
+    zpath = find_zip(year)
+    part = f"financeiro.receita_doador_originario_{year}"
+    cur.execute(f"TRUNCATE {part}")
+    cols = """
+      ano_eleicao, nr_turno, cd_eleicao, sg_uf,
+      nr_cpf_cnpj_doador_originario, nm_doador_originario, tp_doador_originario,
+      cd_cnae_doador_originario, ds_cnae_doador_originario,
+      sq_receita, dt_receita, ds_receita, vr_receita
+    """
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    total = 0
+    for row in iter_kind_rows(zpath, year, KIND_DOADOR):
+        w.writerow(
+            [
+                _int(row.get("AA_ELEICAO")) or year,
+                _int(row.get("ST_TURNO")),
+                _int(row.get("CD_ELEICAO")),
+                _txt(row.get("SG_UF")),
+                _txt(row.get("NR_CPF_CNPJ_DOADOR_ORIGINARIO")),
+                _txt(row.get("NM_DOADOR_ORIGINARIO")),
+                _txt(row.get("TP_DOADOR_ORIGINARIO")),
+                _int(row.get("CD_CNAE_DOADOR_ORIGINARIO")),
+                _txt(row.get("DS_CNAE_DOADOR_ORIGINARIO")),
+                _int(row.get("SQ_RECEITA")),
+                _date(row.get("DT_RECEITA")),
+                _txt(row.get("DS_RECEITA")),
+                _money(row.get("VR_RECEITA")),
+            ]
+        )
+        total += 1
+        if total % CHUNK == 0:
+            flush_copy(cur, part, cols, buf)
+            buf = io.StringIO()
+            w = csv.writer(buf)
+            print(f"  doador {year}: {total} ...", flush=True)
+    flush_copy(cur, part, cols, buf)
+    return total
+
+
 def load_despesas_year(cur, year: int, mapping: dict[int, str]) -> int:
     zpath = find_zip(year)
     part = f"financeiro.despesa_contratada_candidato_{year}"
@@ -256,39 +359,71 @@ def load_despesas_year(cur, year: int, mapping: dict[int, str]) -> int:
     return total
 
 
+def parse_args(argv: list[str]) -> tuple[list[int], set[str]]:
+    kinds = {"receita", "despesa"}
+    years: list[int] = []
+    for a in argv:
+        if a.startswith("--kinds="):
+            raw = a.split("=", 1)[1].strip().lower()
+            if raw in {"all", "*"}:
+                kinds = set(ALL_KINDS)
+            else:
+                kinds = {k.strip() for k in raw.split(",") if k.strip()}
+            bad = kinds - set(ALL_KINDS)
+            if bad:
+                raise SystemExit(f"kinds inválidos: {bad}. Use {ALL_KINDS}")
+        elif a.isdigit():
+            years.append(int(a))
+        else:
+            raise SystemExit(f"Argumento inválido: {a}")
+    return (years or list(YEARS)), kinds
+
+
 def main() -> None:
-    years = [int(a) for a in sys.argv[1:]] if len(sys.argv) > 1 else YEARS
+    years, kinds = parse_args(sys.argv[1:])
     conn = psycopg2.connect(database_url())
     conn.autocommit = False
     try:
         with conn.cursor() as cur:
             print("Applying DDL...", flush=True)
-            cur.execute(SQL.read_text(encoding="utf-8"))
+            cur.execute(SQL_CORE.read_text(encoding="utf-8"))
+            cur.execute(SQL_EXT.read_text(encoding="utf-8"))
             mapping = load_mapping(cur)
-            print(f"  crosswalk entries={len(mapping)}", flush=True)
+            print(f"  crosswalk entries={len(mapping)} kinds={sorted(kinds)}", flush=True)
             conn.commit()
 
             for y in years:
-                print(f"Loading receitas {y} from {find_zip(y).name} ...", flush=True)
-                n_r = load_receitas_year(cur, y, mapping)
-                conn.commit()
-                print(f"  receita {y} rows={n_r}", flush=True)
-
-                print(f"Loading despesas contratadas {y} ...", flush=True)
-                n_d = load_despesas_year(cur, y, mapping)
-                conn.commit()
-                print(f"  despesa {y} rows={n_d}", flush=True)
+                zname = find_zip(y).name
+                if "receita" in kinds:
+                    print(f"Loading receitas {y} from {zname} ...", flush=True)
+                    n_r = load_receitas_year(cur, y, mapping)
+                    conn.commit()
+                    print(f"  receita {y} rows={n_r}", flush=True)
+                if "despesa" in kinds:
+                    print(f"Loading despesas contratadas {y} ...", flush=True)
+                    n_d = load_despesas_year(cur, y, mapping)
+                    conn.commit()
+                    print(f"  despesa {y} rows={n_d}", flush=True)
+                if "pagas" in kinds:
+                    print(f"Loading despesas pagas {y} ...", flush=True)
+                    n_p = load_pagas_year(cur, y)
+                    conn.commit()
+                    print(f"  paga {y} rows={n_p}", flush=True)
+                if "doador" in kinds:
+                    print(f"Loading doador originario {y} ...", flush=True)
+                    n_o = load_doador_year(cur, y)
+                    conn.commit()
+                    print(f"  doador {y} rows={n_o}", flush=True)
 
             cur.execute(
                 """
                 SELECT
                   (SELECT COUNT(*) FROM financeiro.receita_candidato) AS n_rec,
-                  (SELECT COUNT(*) FROM financeiro.receita_candidato WHERE id_municipio IS NOT NULL) AS rec_com_ibge,
-                  (SELECT COALESCE(SUM(vr_receita),0) FROM financeiro.receita_candidato) AS soma_rec,
                   (SELECT COUNT(*) FROM financeiro.despesa_contratada_candidato) AS n_desp,
-                  (SELECT COUNT(*) FROM financeiro.despesa_contratada_candidato WHERE id_municipio IS NOT NULL) AS desp_com_ibge,
-                  (SELECT COALESCE(SUM(vr_despesa_contratada),0) FROM financeiro.despesa_contratada_candidato) AS soma_desp,
-                  (SELECT COUNT(DISTINCT ano_eleicao) FROM financeiro.receita_candidato) AS anos_rec
+                  (SELECT COUNT(*) FROM financeiro.despesa_paga_candidato) AS n_paga,
+                  (SELECT COALESCE(SUM(vr_pagto_despesa),0) FROM financeiro.despesa_paga_candidato) AS soma_paga,
+                  (SELECT COUNT(*) FROM financeiro.receita_doador_originario) AS n_doador,
+                  (SELECT COALESCE(SUM(vr_receita),0) FROM financeiro.receita_doador_originario) AS soma_doador
                 """
             )
             stats = cur.fetchone()
@@ -300,15 +435,14 @@ def main() -> None:
         conn.close()
 
     print(
-        "OK Base 3 P0:",
+        "OK Base 3 extensão:",
         {
             "n_receitas": stats[0],
-            "receitas_com_ibge": stats[1],
-            "soma_receitas": float(stats[2]),
-            "n_despesas": stats[3],
-            "despesas_com_ibge": stats[4],
-            "soma_despesas": float(stats[5]),
-            "anos": stats[6],
+            "n_despesas_contratadas": stats[1],
+            "n_despesas_pagas": stats[2],
+            "soma_pagas": float(stats[3]),
+            "n_doador_originario": stats[4],
+            "soma_doador": float(stats[5]),
         },
         flush=True,
     )

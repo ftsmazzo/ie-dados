@@ -104,6 +104,34 @@ ALLOWED_METRICS_DESPESA = {
     "n_candidatos": "COUNT(DISTINCT sq_candidato)",
 }
 
+ALLOWED_GROUP_BY_PAGA = {
+    "ano_eleicao",
+    "nr_turno",
+    "sg_uf",
+    "ds_origem_despesa",
+    "ds_natureza_despesa",
+    "ds_fonte_despesa",
+    "sq_despesa",
+}
+ALLOWED_METRICS_PAGA = {
+    "sum_pagto": "COALESCE(SUM(vr_pagto_despesa), 0)",
+    "n_linhas": "COUNT(*)",
+}
+
+ALLOWED_GROUP_BY_DOADOR = {
+    "ano_eleicao",
+    "nr_turno",
+    "sg_uf",
+    "tp_doador_originario",
+    "ds_cnae_doador_originario",
+    "sq_receita",
+}
+ALLOWED_METRICS_DOADOR = {
+    "sum_receita": "COALESCE(SUM(vr_receita), 0)",
+    "n_linhas": "COUNT(*)",
+    "n_doadores": "COUNT(DISTINCT nr_cpf_cnpj_doador_originario)",
+}
+
 
 def clamp_max_rows(max_rows: int | None) -> int:
     if max_rows is None:
