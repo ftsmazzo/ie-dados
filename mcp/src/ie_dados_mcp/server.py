@@ -16,6 +16,7 @@ from ie_dados_mcp.tools import analytics as analytics_tools
 from ie_dados_mcp.tools import artifacts as art_tools
 from ie_dados_mcp.tools import catalog as catalog_tools
 from ie_dados_mcp.tools import election as election_tools
+from ie_dados_mcp.tools import finance as finance_tools
 from ie_dados_mcp.tools import geo as geo_tools
 
 
@@ -84,7 +85,7 @@ def build_server() -> MCPServer:
             "Se vier artifact_id, use artifact_get. "
             "Nunca peça dump cru de votacao_candidato_munzona."
         ),
-        version="0.2.0",
+        version="0.3.0",
     )
 
     @mcp.custom_route("/health", methods=["GET"])
@@ -217,6 +218,78 @@ def build_server() -> MCPServer:
             nr_zona=nr_zona,
             cd_cargo=cd_cargo,
             sg_partido=sg_partido,
+            max_rows=max_rows,
+            force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="finance_estimate",
+        description=finance_tools.finance_estimate.__doc__
+        or "Estima agregação financeira.",
+    )
+    def finance_estimate(
+        source: str = "receita",
+        group_by: list[str] | None = None,
+        metrics: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        sq_candidato: int | None = None,
+    ) -> dict[str, Any]:
+        if source not in ("receita", "despesa"):
+            raise ValueError("source: receita | despesa")
+        return finance_tools.finance_estimate(
+            source=source,  # type: ignore[arg-type]
+            group_by=group_by,
+            metrics=metrics,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            sq_candidato=sq_candidato,
+        )
+
+    @mcp.tool(
+        name="finance_aggregate",
+        description=finance_tools.finance_aggregate.__doc__
+        or "Agrega receitas/despesas.",
+    )
+    def finance_aggregate(
+        source: str = "receita",
+        group_by: list[str] | None = None,
+        metrics: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        sq_candidato: int | None = None,
+        max_rows: int | None = 50,
+        force_artifact: bool = False,
+    ) -> dict[str, Any]:
+        if source not in ("receita", "despesa"):
+            raise ValueError("source: receita | despesa")
+        return finance_tools.finance_aggregate(
+            source=source,  # type: ignore[arg-type]
+            group_by=group_by,
+            metrics=metrics,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            sq_candidato=sq_candidato,
             max_rows=max_rows,
             force_artifact=force_artifact,
         )

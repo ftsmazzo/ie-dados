@@ -15,6 +15,9 @@ data/raw/tse/*
 !data/raw/tse/urna/
 data/raw/tse/urna/*
 !data/raw/tse/urna/README.md
+!data/raw/tse/prestacao/
+data/raw/tse/prestacao/*
+!data/raw/tse/prestacao/README.md
 
 data/processed/*
 !data/processed/.gitkeep

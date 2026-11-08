@@ -159,6 +159,55 @@ DOMAINS: dict[str, dict] = {
             "detalhe metric ↔ populacao (exige id_municipio)",
         ],
     },
+    "financeiro": {
+        "id": "financeiro",
+        "title": "Prestação de contas — receitas e despesas de candidatos",
+        "status": "pronta",
+        "cost": "heavy",
+        "tables": {
+            "financeiro.receita_candidato": {
+                "description": (
+                    "Receitas de campanha (~5,2M linhas P0). "
+                    "Use finance_estimate → finance_aggregate. Ligação: sq_candidato+ano."
+                ),
+                "keys": ["ano_eleicao", "sq_candidato", "sq_receita"],
+                "fields": [
+                    "ano_eleicao",
+                    "sg_uf",
+                    "id_municipio",
+                    "cd_cargo",
+                    "sq_candidato",
+                    "sg_partido",
+                    "ds_origem_receita",
+                    "ds_fonte_receita",
+                    "vr_receita",
+                ],
+            },
+            "financeiro.despesa_contratada_candidato": {
+                "description": (
+                    "Despesas contratadas (~14M linhas P0). "
+                    "finance_aggregate source=despesa."
+                ),
+                "keys": ["ano_eleicao", "sq_candidato", "sq_despesa"],
+                "fields": [
+                    "ano_eleicao",
+                    "sg_uf",
+                    "id_municipio",
+                    "cd_cargo",
+                    "sq_candidato",
+                    "sg_partido",
+                    "ds_origem_despesa",
+                    "vr_despesa_contratada",
+                ],
+            },
+        },
+        "recommended_tools": ["finance_estimate", "finance_aggregate", "artifact_get"],
+        "years_p0": [2018, 2020, 2022, 2024, 2026],
+        "notes": [
+            "Municipais (2020/2024): id_municipio preenchido via SG_UE TSE.",
+            "Gerais (2018/2022/2026): id_municipio geralmente nulo — filtre UF/cargo/candidato.",
+        ],
+    },
 }
 
 

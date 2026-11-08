@@ -69,6 +69,41 @@ SERIES_INLINE_MAX = 50
 CORRELATE_MIN_POINTS = 5
 SERIES_SERVER_MAX = 5000
 
+# Financeiro (Base 3)
+_ALLOWED_GROUP_BY_FIN_COMMON = {
+    "ano_eleicao",
+    "nr_turno",
+    "sg_uf",
+    "id_municipio",
+    "cd_municipio_tse",
+    "cd_cargo",
+    "ds_cargo",
+    "sg_partido",
+    "nr_partido",
+    "sq_candidato",
+}
+ALLOWED_GROUP_BY_RECEITA = _ALLOWED_GROUP_BY_FIN_COMMON | {
+    "ds_origem_receita",
+    "ds_fonte_receita",
+}
+ALLOWED_GROUP_BY_DESPESA = _ALLOWED_GROUP_BY_FIN_COMMON | {
+    "ds_origem_despesa",
+}
+# alias legado
+ALLOWED_GROUP_BY_FINANCEIRO = ALLOWED_GROUP_BY_RECEITA | ALLOWED_GROUP_BY_DESPESA
+
+ALLOWED_METRICS_RECEITA = {
+    "sum_receita": "COALESCE(SUM(vr_receita), 0)",
+    "n_linhas": "COUNT(*)",
+    "n_candidatos": "COUNT(DISTINCT sq_candidato)",
+}
+
+ALLOWED_METRICS_DESPESA = {
+    "sum_despesa": "COALESCE(SUM(vr_despesa_contratada), 0)",
+    "n_linhas": "COUNT(*)",
+    "n_candidatos": "COUNT(DISTINCT sq_candidato)",
+}
+
 
 def clamp_max_rows(max_rows: int | None) -> int:
     if max_rows is None:

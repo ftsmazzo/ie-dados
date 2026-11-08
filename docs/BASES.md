@@ -10,7 +10,7 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 |---|---------|-----------|-------|----------|--------|
 | 1 | Municípios + população | `data/raw/ibge/municipios/` e `data/raw/ibge/populacao/` | IBGE | `id_municipio` (7 dígitos) | **pronta** |
 | 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
-| 3 | Financiamento / dinheiro | `data/raw/tse/prestacao/` | TSE | a definir com base 1–2 | aguardando ZIP |
+| 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
 | 4 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
@@ -108,6 +108,71 @@ Obs.: anos antigos (pré-2014) têm menos colunas / qualidade irregular — carr
 2. Schema `eleitoral` (votos + detalhe + metadados de eleição)
 3. Carga por ano + validação de totais
 4. Camada analítica futura: eixo ideológico / coalizão (tabela curada, separada do fato TSE)
+
+## Base 3 — Financiamento / prestação de contas (**P0 pronta**)
+
+- **Objetivo:** receitas e despesas de campanha para cruzar **dinheiro × voto × porte municipal**
+- **Pasta:** `data/raw/tse/prestacao/AAAA/candidatos/`
+- **Tabelas:** `financeiro.receita_candidato`, `financeiro.despesa_contratada_candidato`
+- **Scripts:** `scripts/load_prestacao.py` · **SQL:** `sql/004_financeiro.sql`
+- **MCP:** `finance_estimate` / `finance_aggregate` (domínio `financeiro`)
+- **Chave com Base 2:** `sq_candidato` + `ano_eleicao`
+- **Fora do P0 ainda:** despesas pagas, doador originário, órgãos partidários, extratos
+
+### Validação (carga P0 em produção)
+
+| Ano | Receitas | c/ IBGE | Despesas | c/ IBGE |
+|-----|----------|---------|----------|---------|
+| 2018 | 328.657 | 0 (geral) | 1.716.410 | 0 |
+| 2020 | 2.339.074 | 100% | 4.107.530 | 100% |
+| 2022 | 281.928 | 0 (geral) | 2.200.603 | 0 |
+| 2024 | 2.041.143 | 100% | 4.453.427 | 100% |
+| 2026 | 249.203 | 0 (geral) | 1.768.051 | 0 |
+| **Total** | **5.240.005** | | **14.246.021** | |
+
+Smoke: Campinas 2024 vereador → 4.001 receitas / R$ 15,3 mi.  
+Join 2022 receita↔votação: 26.056 / 27.945 `sq_candidato` com voto.
+
+### Prioridade de download
+
+| Lote | Anos | Motivo |
+|------|------|--------|
+| **P0** | 2026, 2024, 2022, 2020, 2018 | ciclo recente + mesmo padrão de nome no CDN |
+| P1 | 2016, 2014, 2012 | municipais/gerais intermediários (nome de arquivo muda) |
+| P2 | 2010, 2008, 2004, 2002 | série antiga (schema mais irregular) |
+
+### P0 — baixar agora (link → pasta)
+
+Raiz do projeto: `C:\Users\anjo_\OneDrive\Projetos-FabriaIA\ie-dados\`
+
+| Ano | Link | Pasta (coloque o ZIP aqui) | ~tamanho |
+|-----|------|----------------------------|----------|
+| 2026 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2026.zip | `data/raw/tse/prestacao/2026/candidatos/` | ~402 MB |
+| 2024 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2024.zip | `data/raw/tse/prestacao/2024/candidatos/` | ~1,2 GB |
+| 2022 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2022.zip | `data/raw/tse/prestacao/2022/candidatos/` | ~497 MB |
+| 2020 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2020.zip | `data/raw/tse/prestacao/2020/candidatos/` | ~1,3 GB |
+| 2018 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2018.zip | `data/raw/tse/prestacao/2018/candidatos/` | ~297 MB |
+
+Portais: [2026](https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-eleitorais-2026) · [2024](https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-eleitorais-2024) · [2022](https://dadosabertos.tse.jus.br/dataset/dadosabertos-tse-jus-br-dataset-prestacao-de-contas-eleitorais-2022)
+
+### P1 / P2 (só depois do P0 — nomes diferentes)
+
+| Ano | Arquivo CDN | Pasta |
+|-----|-------------|-------|
+| 2016 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_final_2016.zip | `data/raw/tse/prestacao/2016/candidatos/` |
+| 2014 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_final_2014.zip | `data/raw/tse/prestacao/2014/candidatos/` |
+| 2012 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_final_2012.zip | `data/raw/tse/prestacao/2012/candidatos/` |
+| 2010 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_2010.zip | `data/raw/tse/prestacao/2010/candidatos/` |
+| 2008 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_2008.zip | `data/raw/tse/prestacao/2008/candidatos/` |
+| 2004 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_2004.zip | `data/raw/tse/prestacao/2004/candidatos/` |
+| 2002 | https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_contas_2002.zip | `data/raw/tse/prestacao/2002/candidatos/` |
+
+### Depois dos ZIPs (nós)
+
+1. Inventariar CSVs dentro do ZIP (receitas / despesas / …)
+2. Schema `financeiro` (ou `eleitoral` + tabelas de prestação) + ligar a `sq_candidato` / município
+3. Carga + validação de totais
+4. Tools MCP `finance_estimate` / `finance_aggregate` (mesmo padrão anti-token)
 
 ## Notas
 

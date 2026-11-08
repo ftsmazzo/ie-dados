@@ -29,6 +29,8 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | get_populacao | cheap | exige município ou UF |
 | election_estimate | cheap | antes de agregações amplas |
 | election_aggregate | heavy | `group_by` + `metrics` obrigatórios |
+| finance_estimate | cheap | antes de agregações de receita/despesa |
+| finance_aggregate | heavy | `source=receita\|despesa` + group_by + metrics |
 | series_build | medium | série temporal (exige `ano_eleicao` no group_by) |
 | correlate | medium | Pearson/Spearman; resumo + amostra |
 | series_compare | medium | delta e % YoY |
@@ -80,5 +82,14 @@ Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
 4. `series_compare` com `metric=rate_nulos_sobre_validos` para deltas YoY
 
 Rates em `detalhe`: `rate_nulos_sobre_validos`, `rate_brancos_sobre_validos`, `rate_abstencao`, `rate_comparecimento`.
+
+### Exemplo — receita por partido (Campinas / vereador 2024)
+
+1. `resolve_municipio` → `3509502`
+2. `finance_estimate` `source=receita`, `ano_eleicao=2024`, `id_municipio`, `cd_cargo=13`, `group_by=["sg_partido"]`, `metrics=["sum_receita"]`
+3. `finance_aggregate` com os mesmos filtros
+
+Metrics: `sum_receita` / `sum_despesa`, `n_linhas`, `n_candidatos`.  
+Anos P0: 2018, 2020, 2022, 2024, 2026.
 
 `cd_cargo` comuns: `1` Presidente, `3` Governador, `5` Senador, `6` Dep. Federal, `7` Dep. Estadual, `11` Prefeito, `13` Vereador.
