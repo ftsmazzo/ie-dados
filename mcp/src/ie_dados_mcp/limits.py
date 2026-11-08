@@ -132,6 +132,21 @@ ALLOWED_METRICS_DOADOR = {
     "n_doadores": "COUNT(DISTINCT nr_cpf_cnpj_doador_originario)",
 }
 
+# Join paga↔contratada (group_by só colunas da contratada)
+ALLOWED_GROUP_BY_PAGO_CONTRATADO = {
+    "ano_eleicao",
+    "nr_turno",
+    "sg_uf",
+    "id_municipio",
+    "cd_municipio_tse",
+    "cd_cargo",
+    "ds_cargo",
+    "sg_partido",
+    "nr_partido",
+    "sq_candidato",
+    "ds_origem_despesa",
+}
+
 
 def clamp_max_rows(max_rows: int | None) -> int:
     if max_rows is None:

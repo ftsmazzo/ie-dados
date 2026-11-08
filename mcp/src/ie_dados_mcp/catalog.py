@@ -229,7 +229,12 @@ DOMAINS: dict[str, dict] = {
                 ],
             },
         },
-        "recommended_tools": ["finance_estimate", "finance_aggregate", "artifact_get"],
+        "recommended_tools": [
+            "finance_estimate",
+            "finance_aggregate",
+            "finance_pago_contratado",
+            "artifact_get",
+        ],
         "years_p0": [2018, 2020, 2022, 2024, 2026],
         "notes": [
             "Municipais (2020/2024): id_municipio preenchido via SG_UE TSE.",

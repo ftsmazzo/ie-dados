@@ -10,6 +10,7 @@ from ie_dados_mcp.limits import (
     ALLOWED_GROUP_BY_DESPESA,
     ALLOWED_GROUP_BY_DOADOR,
     ALLOWED_GROUP_BY_PAGA,
+    ALLOWED_GROUP_BY_PAGO_CONTRATADO,
     ALLOWED_GROUP_BY_RECEITA,
     ALLOWED_METRICS_DESPESA,
     ALLOWED_METRICS_DOADOR,
@@ -303,6 +304,149 @@ def finance_aggregate(
         artifact_id = art.save_artifact(
             kind="finance_aggregate",
             title=f"{source} aggregate",
+            columns=columns,
+            rows=clean,
+            meta=meta,
+        )
+        return {
+            "mode": "artifact",
+            "artifact_id": artifact_id,
+            "n_rows": len(clean),
+            "n_groups_estimated": n_groups,
+            "columns": columns,
+            "sample": clean[:SAMPLE_SIZE],
+            "cost": "heavy",
+        }
+    return {
+        "mode": "inline",
+        "n_rows": len(clean),
+        "n_groups_estimated": n_groups,
+        "columns": columns,
+        "rows": clean,
+        "meta": meta,
+        "cost": "heavy",
+    }
+
+
+def finance_pago_contratado(
+    group_by: list[str] | None = None,
+    ano_eleicao: int | None = None,
+    nr_turno: int | None = None,
+    sg_uf: str | None = None,
+    id_municipio: str | None = None,
+    cd_municipio_tse: int | None = None,
+    cd_cargo: int | None = None,
+    sg_partido: str | None = None,
+    sq_candidato: int | None = None,
+    max_rows: int | None = 50,
+    force_artifact: bool = False,
+) -> dict:
+    """Taxa pago/contratado: soma pagamentos ÷ soma contratada (join por sq_despesa).
+
+    WHEN TO USE: comparar caixa vs compromisso — ex. partido×município em 2020/2024.
+    WHEN NOT TO USE: sem escopo; dump de fornecedores; misturar com receita.
+    COST: heavy.
+    Preferir anos municipais (id_municipio preenchido). Em gerais filtre sg_uf/cd_cargo.
+    rate_pago_sobre_contratado > 1 pode ocorrer (pagamentos em mais de uma parcela/ano-contábil).
+    """
+    group_by = group_by or ["sg_partido"]
+    bad = [g for g in group_by if g not in ALLOWED_GROUP_BY_PAGO_CONTRATADO]
+    if bad:
+        raise ValueError(
+            f"group_by inválido: {bad}. Permitidos: {sorted(ALLOWED_GROUP_BY_PAGO_CONTRATADO)}"
+        )
+    if not (ano_eleicao or id_municipio or sg_uf or sq_candidato):
+        raise ValueError(
+            "Escopo obrigatório: ano_eleicao e/ou id_municipio e/ou sg_uf e/ou sq_candidato"
+        )
+    max_rows = clamp_max_rows(max_rows)
+
+    clauses: list[str] = []
+    params: list[Any] = []
+    if ano_eleicao is not None:
+        clauses.append("c.ano_eleicao = %s")
+        params.append(ano_eleicao)
+    if nr_turno is not None:
+        clauses.append("c.nr_turno = %s")
+        params.append(nr_turno)
+    if sg_uf:
+        clauses.append("c.sg_uf = %s")
+        params.append(sg_uf.upper())
+    if id_municipio:
+        clauses.append("c.id_municipio = %s")
+        params.append(id_municipio.zfill(7))
+    if cd_municipio_tse is not None:
+        clauses.append("c.cd_municipio_tse = %s")
+        params.append(cd_municipio_tse)
+    if cd_cargo is not None:
+        clauses.append("c.cd_cargo = %s")
+        params.append(cd_cargo)
+    if sg_partido:
+        clauses.append("c.sg_partido = %s")
+        params.append(sg_partido.upper())
+    if sq_candidato is not None:
+        clauses.append("c.sq_candidato = %s")
+        params.append(sq_candidato)
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+
+    gb = ", ".join(f"c.{g}" for g in group_by)
+    select_g = ", ".join(f"c.{g}" for g in group_by)
+
+    # Agrega paga por (ano, sq_despesa) antes do join para não multiplicar contratada
+    base_sql = f"""
+        FROM financeiro.despesa_contratada_candidato c
+        LEFT JOIN (
+            SELECT ano_eleicao, sq_despesa,
+                   SUM(vr_pagto_despesa) AS vr_pagto
+            FROM financeiro.despesa_paga_candidato
+            GROUP BY ano_eleicao, sq_despesa
+        ) p
+          ON p.ano_eleicao = c.ano_eleicao
+         AND p.sq_despesa = c.sq_despesa
+        {where}
+        GROUP BY {gb}
+    """
+    est = db.fetch_one(
+        f"SELECT COUNT(*) AS n_groups FROM (SELECT 1 {base_sql}) s",
+        tuple(params),
+    )
+    n_groups = int(est["n_groups"]) if est else 0
+    server_limit = 5000 if (force_artifact or n_groups > ARTIFACT_THRESHOLD) else max_rows
+
+    sql = f"""
+        SELECT {select_g},
+               COALESCE(SUM(c.vr_despesa_contratada), 0) AS sum_contratada,
+               COALESCE(SUM(p.vr_pagto), 0) AS sum_pago,
+               COALESCE(SUM(p.vr_pagto), 0)::float
+                 / NULLIF(SUM(c.vr_despesa_contratada), 0) AS rate_pago_sobre_contratado,
+               COUNT(*) AS n_despesas_contratadas
+        {base_sql}
+        ORDER BY sum_contratada DESC NULLS LAST
+        LIMIT {int(server_limit)}
+    """
+    clean = _clean(db.fetch_all(sql, tuple(params)))
+    columns = (
+        list(clean[0].keys())
+        if clean
+        else group_by
+        + ["sum_contratada", "sum_pago", "rate_pago_sobre_contratado", "n_despesas_contratadas"]
+    )
+    meta = {
+        "group_by": group_by,
+        "n_groups_estimated": n_groups,
+        "filters": {
+            "ano_eleicao": ano_eleicao,
+            "id_municipio": id_municipio,
+            "cd_cargo": cd_cargo,
+            "sg_uf": sg_uf,
+            "sg_partido": sg_partido,
+        },
+        "join": "despesa_paga aggregated by (ano_eleicao, sq_despesa) → contratada",
+    }
+    if force_artifact or n_groups > ARTIFACT_THRESHOLD or len(clean) > max_rows:
+        artifact_id = art.save_artifact(
+            kind="finance_pago_contratado",
+            title="pago/contratado",
             columns=columns,
             rows=clean,
             meta=meta,

@@ -295,6 +295,38 @@ def build_server() -> MCPServer:
         )
 
     @mcp.tool(
+        name="finance_pago_contratado",
+        description=finance_tools.finance_pago_contratado.__doc__
+        or "Taxa pago sobre contratado.",
+    )
+    def finance_pago_contratado(
+        group_by: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        sq_candidato: int | None = None,
+        max_rows: int | None = 50,
+        force_artifact: bool = False,
+    ) -> dict[str, Any]:
+        return finance_tools.finance_pago_contratado(
+            group_by=group_by,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            sq_candidato=sq_candidato,
+            max_rows=max_rows,
+            force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
         name="series_build",
         description=analytics_tools.series_build.__doc__ or "Série temporal agregada.",
     )
