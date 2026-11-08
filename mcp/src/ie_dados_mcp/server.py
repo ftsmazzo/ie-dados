@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse, PlainTextResponse, Response
 from starlette.types import ASGIApp
 
 from ie_dados_mcp import db
+from ie_dados_mcp.tools import analytics as analytics_tools
 from ie_dados_mcp.tools import artifacts as art_tools
 from ie_dados_mcp.tools import catalog as catalog_tools
 from ie_dados_mcp.tools import election as election_tools
@@ -77,12 +78,13 @@ def build_server() -> MCPServer:
             "resultados eleitorais mun/zona). Sem SQL livre. Sempre estime antes de agregar."
         ),
         instructions=(
-            "Fluxo obrigatório sugerido: list_domains → describe_domain → "
+            "Fluxo sugerido: list_domains → describe_domain → "
             "resolve_municipio → election_estimate → election_aggregate. "
-            "Se a resposta vier com artifact_id, use artifact_get. "
+            "Para séries/correlação: series_build → correlate / series_compare. "
+            "Se vier artifact_id, use artifact_get. "
             "Nunca peça dump cru de votacao_candidato_munzona."
         ),
-        version="0.1.0",
+        version="0.2.0",
     )
 
     @mcp.custom_route("/health", methods=["GET"])
@@ -217,6 +219,115 @@ def build_server() -> MCPServer:
             sg_partido=sg_partido,
             max_rows=max_rows,
             force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="series_build",
+        description=analytics_tools.series_build.__doc__ or "Série temporal agregada.",
+    )
+    def series_build(
+        source: str = "detalhe",
+        metrics: list[str] | None = None,
+        group_by: list[str] | None = None,
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        nr_zona: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        max_rows: int | None = 50,
+        force_artifact: bool = False,
+    ) -> dict[str, Any]:
+        if source not in ("votacao", "detalhe"):
+            raise ValueError("source deve ser 'votacao' ou 'detalhe'")
+        return analytics_tools.series_build(
+            source=source,  # type: ignore[arg-type]
+            metrics=metrics,
+            group_by=group_by,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            nr_zona=nr_zona,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            max_rows=max_rows,
+            force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="correlate",
+        description=analytics_tools.correlate.__doc__ or "Correlação tipada.",
+    )
+    def correlate(
+        metric_x: str,
+        metric_y: str,
+        source: str = "detalhe",
+        y_source: str = "metric",
+        method: str = "both",
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        nr_zona: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+    ) -> dict[str, Any]:
+        if source not in ("votacao", "detalhe"):
+            raise ValueError("source deve ser 'votacao' ou 'detalhe'")
+        if y_source not in ("metric", "populacao"):
+            raise ValueError("y_source deve ser 'metric' ou 'populacao'")
+        return analytics_tools.correlate(
+            metric_x=metric_x,
+            metric_y=metric_y,
+            source=source,  # type: ignore[arg-type]
+            y_source=y_source,  # type: ignore[arg-type]
+            method=method,
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            nr_zona=nr_zona,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+        )
+
+    @mcp.tool(
+        name="series_compare",
+        description=analytics_tools.series_compare.__doc__ or "Comparação YoY.",
+    )
+    def series_compare(
+        metric: str,
+        source: str = "detalhe",
+        ano_eleicao: int | None = None,
+        nr_turno: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        cd_municipio_tse: int | None = None,
+        nr_zona: int | None = None,
+        cd_cargo: int | None = None,
+        sg_partido: str | None = None,
+        max_rows: int | None = 50,
+    ) -> dict[str, Any]:
+        if source not in ("votacao", "detalhe"):
+            raise ValueError("source deve ser 'votacao' ou 'detalhe'")
+        return analytics_tools.series_compare(
+            metric=metric,
+            source=source,  # type: ignore[arg-type]
+            ano_eleicao=ano_eleicao,
+            nr_turno=nr_turno,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            cd_municipio_tse=cd_municipio_tse,
+            nr_zona=nr_zona,
+            cd_cargo=cd_cargo,
+            sg_partido=sg_partido,
+            max_rows=max_rows,
         )
 
     @mcp.tool(

@@ -4,7 +4,7 @@ from ie_dados_mcp import catalog as cat
 
 
 def list_domains() -> dict:
-    """Lista domínios de dados disponíveis (ref, eleitoral, ...).
+    """Lista domínios de dados disponíveis (ref, eleitoral, analytics, ...).
 
     WHEN TO USE: primeiro passo de qualquer sessão — descobrir o que existe.
     WHEN NOT TO USE: se já sabe o domínio; vá direto para describe_domain.
@@ -14,7 +14,8 @@ def list_domains() -> dict:
         "domains": cat.list_domains(),
         "flow": (
             "list_domains → describe_domain → resolve_municipio → "
-            "election_estimate → election_aggregate (ou artifact_get)"
+            "election_estimate → election_aggregate | "
+            "series_build → correlate / series_compare (ou artifact_get)"
         ),
     }
 

@@ -96,7 +96,14 @@ DOMAINS: dict[str, dict] = {
         "recommended_tools": [
             "election_estimate",
             "election_aggregate",
+            "series_build",
             "artifact_get",
+        ],
+        "derived_metrics_detalhe": [
+            "rate_nulos_sobre_validos",
+            "rate_brancos_sobre_validos",
+            "rate_abstencao",
+            "rate_comparecimento",
         ],
         "years": [
             1998,
@@ -114,6 +121,42 @@ DOMAINS: dict[str, dict] = {
             2022,
             2024,
             2026,
+        ],
+    },
+    "analytics": {
+        "id": "analytics",
+        "title": "Séries temporais e correlações tipadas",
+        "status": "pronta",
+        "cost": "medium",
+        "tables": {
+            "virtual.series": {
+                "description": (
+                    "Séries agregadas por ano a partir de eleitoral.detalhe_munzona "
+                    "ou votacao (+ opcional ref.populacao_municipio). "
+                    "Use series_build → correlate / series_compare. Sem SQL livre."
+                ),
+                "keys": ["ano_eleicao", "id_municipio"],
+                "fields": [
+                    "ano_eleicao",
+                    "sum_*",
+                    "rate_*",
+                    "populacao",
+                    "delta",
+                    "pct_change",
+                    "pearson_r",
+                    "spearman_rho",
+                ],
+            },
+        },
+        "recommended_tools": [
+            "series_build",
+            "correlate",
+            "series_compare",
+            "artifact_get",
+        ],
+        "whitelist_pairs": [
+            "detalhe metric ↔ detalhe metric (mesmo filtros, alinhado por ano)",
+            "detalhe metric ↔ populacao (exige id_municipio)",
         ],
     },
 }

@@ -9,7 +9,8 @@ Servidor MCP tipado sobre o Postgres `iedados`. Sem SQL livre. Consultas grandes
 3. `resolve_municipio` — obter `id_municipio`  
 4. `election_estimate` — quantos grupos a agregação gera  
 5. `election_aggregate` — resultado inline ou `artifact_id`  
-6. `artifact_get` — paginar artefato grande  
+6. **Analytics:** `series_build` → `correlate` / `series_compare`  
+7. `artifact_get` — paginar artefato grande  
 
 ## Auth
 
@@ -28,6 +29,9 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | get_populacao | cheap | exige município ou UF |
 | election_estimate | cheap | antes de agregações amplas |
 | election_aggregate | heavy | `group_by` + `metrics` obrigatórios |
+| series_build | medium | série temporal (exige `ano_eleicao` no group_by) |
+| correlate | medium | Pearson/Spearman; resumo + amostra |
+| series_compare | medium | delta e % YoY |
 | artifact_get | cheap | só com `artifact_id` válido |
 
 ## Limites anti-token
@@ -36,6 +40,7 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 - agregação obrigatória em votação  
 - escopo mínimo: `ano_eleicao` e/ou `id_municipio` e/ou `sg_uf`  
 - se muitos grupos → `mode=artifact` + amostra de 5 linhas  
+- `correlate` exige ≥ 5 pontos alinhados por ano  
 
 ## Local
 
@@ -57,12 +62,23 @@ App EasyPanel `ie-dados` / serviço `mcp`, build a partir de `/mcp` no repo.
 - MCP: `POST /mcp` com `Authorization: Bearer <MCP_TOKEN>`
 - Opcional: `MCP_ALLOWED_HOSTS=ie-dados-mcp.kxryyk.easypanel.host` para reativar checagem de Host
 
-### Exemplo de fluxo (Campinas / vereador 2022)
+### Exemplo — votos por partido (Campinas / Dep. Estadual 2022)
 
 1. `resolve_municipio` com `nome=Campinas`, `sigla_uf=SP` → `id_municipio=3509502`
 2. `election_estimate` com `ano_eleicao=2022`, `nr_turno=1`, `cd_cargo=7`, `id_municipio`, `group_by=["nr_partido"]`, `metrics=["sum_votos"]`
 3. `election_aggregate` com os mesmos filtros (`max_rows` ≤ 200)
 
 Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
+
+### Exemplo — nulos vs válidos ao longo dos anos (analytics)
+
+1. `resolve_municipio` → `3509502`
+2. `series_build` com `source=detalhe`, `id_municipio`, `cd_cargo=13` (ou `7`), `nr_turno=1`,  
+   `metrics=["sum_nulos","sum_validos","rate_nulos_sobre_validos"]`
+3. `correlate` com `metric_x=rate_nulos_sobre_validos`, `metric_y=sum_validos`, mesmos filtros  
+   — ou `metric_y=populacao`, `y_source=populacao`
+4. `series_compare` com `metric=rate_nulos_sobre_validos` para deltas YoY
+
+Rates em `detalhe`: `rate_nulos_sobre_validos`, `rate_brancos_sobre_validos`, `rate_abstencao`, `rate_comparecimento`.
 
 `cd_cargo` comuns: `1` Presidente, `3` Governador, `5` Senador, `6` Dep. Federal, `7` Dep. Estadual, `11` Prefeito, `13` Vereador.

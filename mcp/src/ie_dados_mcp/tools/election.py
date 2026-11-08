@@ -118,7 +118,7 @@ def _build_agg_sql(
     sql = (
         f"SELECT {', '.join(select_parts)} FROM {table}{where} "
         f"GROUP BY {', '.join(group_by)} "
-        f"ORDER BY {metrics[0]} DESC"
+        f"ORDER BY {metrics[0]} DESC NULLS LAST"
     )
     if limit is not None:
         sql += f" LIMIT {int(limit)}"
