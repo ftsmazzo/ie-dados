@@ -35,7 +35,7 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | finance_aggregate | heavy | `source=receita\|despesa\|paga\|doador` |
 | finance_pago_contratado | heavy | taxa pago÷contratado (join `sq_despesa`) |
 | series_build | medium | série temporal (exige `ano_eleicao` no group_by) |
-| correlate | medium | Pearson/Spearman; resumo + amostra |
+| correlate | medium | Pearson/Spearman; `y_source=metric\|populacao\|pib\|idhm`; `align_by=ano\|municipio` |
 | series_compare | medium | delta e % YoY |
 | artifact_get | cheap | só com `artifact_id` válido |
 
@@ -83,6 +83,21 @@ Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
 3. `correlate` com `metric_x=rate_nulos_sobre_validos`, `metric_y=sum_validos`, mesmos filtros  
    — ou `metric_y=populacao`, `y_source=populacao`
 4. `series_compare` com `metric=rate_nulos_sobre_validos` para deltas YoY
+
+### Exemplo — abstencão × PIB / IDHM (Base 4)
+
+**Série temporal (um município × anos)** — só PIB (IDHM tem só 3 censos):
+
+1. `resolve_municipio` → `3509502`
+2. `correlate` `metric_x=rate_abstencao`, `y_source=pib`, `metric_y=pib_per_capita`,  
+   `align_by=ano`, `id_municipio`, `cd_cargo=13`, `nr_turno=1`
+
+**Corte transversal (municípios de uma UF no ano)** — PIB ou IDHM:
+
+1. `correlate` `metric_x=rate_abstencao`, `y_source=idhm`, `metric_y=idhm`,  
+   `align_by=municipio`, `ano_eleicao=2020`, `sg_uf=SP`, `cd_cargo=13`, `nr_turno=1`  
+   (IDHM usa censo mais próximo → 2010)
+2. Idem com `y_source=pib`, `metric_y=pib_per_capita` (PIB do próprio `ano_eleicao`)
 
 Rates em `detalhe`: `rate_nulos_sobre_validos`, `rate_brancos_sobre_validos`, `rate_abstencao`, `rate_comparecimento`.
 

@@ -11,7 +11,7 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 1 | Municípios + população | `data/raw/ibge/municipios/` e `data/raw/ibge/populacao/` | IBGE | `id_municipio` (7 dígitos) | **pronta** |
 | 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
-| 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **carregado P0** (`ref.pib_municipio` 77.965 / `ref.idhm_municipio` 16.643) |
+| 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **pronta** (carga + `get_pib`/`get_idhm` + `correlate` pib/idhm) |
 | 5 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
@@ -206,7 +206,8 @@ Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/
 1. Inventário + `sql/006_socioeconomico.sql`
 2. `scripts/prepare_socioeconomico.py` + `scripts/load_socioeconomico.py`
 3. Validação: PIB 2010–2023 (5.570 mun em 2023); IDHM 2010=5.565 / 2000=5.539 / 1991=5.539; órfãos=0
-4. **Próximo:** MCP métricas `get_indicadores` / `correlate` com PIB per capita e IDHM
+4. MCP: `get_pib`, `get_idhm`, `correlate` com `y_source=pib|idhm` e `align_by=ano|municipio`  
+5. **Próximo na fila:** Base 5 — Senado / leis
 
 ## Notas
 

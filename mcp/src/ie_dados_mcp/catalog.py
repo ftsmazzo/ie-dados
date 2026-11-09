@@ -167,15 +167,22 @@ DOMAINS: dict[str, dict] = {
             "virtual.series": {
                 "description": (
                     "Séries agregadas por ano a partir de eleitoral.detalhe_munzona "
-                    "ou votacao (+ opcional ref.populacao_municipio). "
+                    "ou votacao (+ populacao / PIB / IDHM). "
                     "Use series_build → correlate / series_compare. Sem SQL livre."
                 ),
                 "keys": ["ano_eleicao", "id_municipio"],
                 "fields": [
                     "ano_eleicao",
+                    "id_municipio",
                     "sum_*",
                     "rate_*",
                     "populacao",
+                    "pib_mil",
+                    "pib_per_capita",
+                    "idhm",
+                    "idhm_renda",
+                    "idhm_longevidade",
+                    "idhm_educacao",
                     "delta",
                     "pct_change",
                     "pearson_r",
@@ -187,11 +194,15 @@ DOMAINS: dict[str, dict] = {
             "series_build",
             "correlate",
             "series_compare",
+            "get_pib",
+            "get_idhm",
             "artifact_get",
         ],
         "whitelist_pairs": [
-            "detalhe metric ↔ detalhe metric (mesmo filtros, alinhado por ano)",
-            "detalhe metric ↔ populacao (exige id_municipio)",
+            "detalhe metric ↔ detalhe metric (align_by=ano)",
+            "detalhe metric ↔ populacao (align_by=ano, exige id_municipio)",
+            "detalhe/votacao metric ↔ pib (align_by=ano com id_municipio; ou municipio+sg_uf)",
+            "detalhe/votacao metric ↔ idhm (só align_by=municipio + sg_uf + ano_eleicao)",
         ],
     },
     "financeiro": {

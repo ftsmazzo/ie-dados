@@ -406,6 +406,7 @@ def build_server() -> MCPServer:
         metric_y: str,
         source: str = "detalhe",
         y_source: str = "metric",
+        align_by: str = "ano",
         method: str = "both",
         ano_eleicao: int | None = None,
         nr_turno: int | None = None,
@@ -418,13 +419,16 @@ def build_server() -> MCPServer:
     ) -> dict[str, Any]:
         if source not in ("votacao", "detalhe"):
             raise ValueError("source deve ser 'votacao' ou 'detalhe'")
-        if y_source not in ("metric", "populacao"):
-            raise ValueError("y_source deve ser 'metric' ou 'populacao'")
+        if y_source not in ("metric", "populacao", "pib", "idhm"):
+            raise ValueError("y_source deve ser 'metric' | 'populacao' | 'pib' | 'idhm'")
+        if align_by not in ("ano", "municipio"):
+            raise ValueError("align_by deve ser 'ano' ou 'municipio'")
         return analytics_tools.correlate(
             metric_x=metric_x,
             metric_y=metric_y,
             source=source,  # type: ignore[arg-type]
             y_source=y_source,  # type: ignore[arg-type]
+            align_by=align_by,  # type: ignore[arg-type]
             method=method,
             ano_eleicao=ano_eleicao,
             nr_turno=nr_turno,
