@@ -26,6 +26,12 @@ data/raw/tse/urna/*
 !data/raw/tse/prestacao/
 data/raw/tse/prestacao/*
 !data/raw/tse/prestacao/README.md
+!data/raw/tse/planos_governo/
+data/raw/tse/planos_governo/*
+!data/raw/tse/planos_governo/README.md
+!data/raw/tse/consulta_cand/
+data/raw/tse/consulta_cand/*
+!data/raw/tse/consulta_cand/README.md
 
 data/processed/*
 !data/processed/.gitkeep

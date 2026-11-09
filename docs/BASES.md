@@ -12,7 +12,8 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 2 | Urnas / resultados | `data/raw/tse/urna/` | TSE | `id_municipio` + `zona` (+ ano/turno/cargo) | **pronta** |
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
 | 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **pronta** (carga + `get_pib`/`get_idhm` + `correlate` pib/idhm) |
-| 5 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
+| 5 | Planos de Governo (Acervo RAG) | `data/raw/tse/planos_governo/` | TSE proposta_governo | `sq_candidato` + `ano` (+ `eleito`) | **P0 BR pronto** (2018/2022/2026 Pres indexados; UF municipais sob demanda) |
+| 6 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP (depois dos planos) |
 
 ## Base 1 — Municípios + população (pronta)
 
@@ -207,7 +208,32 @@ Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/
 2. `scripts/prepare_socioeconomico.py` + `scripts/load_socioeconomico.py`
 3. Validação: PIB 2010–2023 (5.570 mun em 2023); IDHM 2010=5.565 / 2000=5.539 / 1991=5.539; órfãos=0
 4. MCP: `get_pib`, `get_idhm`, `correlate` com `y_source=pib|idhm` e `align_by=ano|municipio`  
-5. **Próximo na fila:** Base 5 — Senado / leis
+5. MCP: `get_pib`, `get_idhm`, `correlate` com `y_source=pib|idhm` e `align_by=ano|municipio`
+
+## Base 5 — Planos de Governo (Acervo RAG, em andamento)
+
+- **Objetivo:** cruzar propostas temáticas, boas práticas de quem **venceu**, e seed de ideia a partir de planos eleitos
+- **Universo P0:** todos candidatos executivos com PDF no TSE (Presidente, Governador, Prefeito) — não só eleitos
+- **Marcação:** `eleito boolean` (venceu a eleição). Presidente/governo **atual** = ciclo **2026**
+- **Anos P0:** 2018, 2020, 2022, 2024, **2026**
+- **Pasta:** `data/raw/tse/planos_governo/` — ver README com links CDN
+- **Tabelas:** `ref.plano_governo` (catálogo) + `docs.plano_chunk` (acervo textual/FTS)
+- **Scripts:** `inventario_planos_governo.py`, `load_planos_governo.py`, `index_planos_governo.py`
+- **MCP:** `plano_search_meta`, `plano_retrieve`, `plano_compare_tema`, `plano_seed_ideia`
+- **Fora do P0:** Senado/leis (Base 6), embedding vetorial externo, anos &lt; 2018
+
+### P0 — baixar (prioridade)
+
+| # | O quê | Link padrão | Pasta |
+|---|--------|-------------|-------|
+| 1 | Presidente 2026 | https://cdn.tse.jus.br/estatistica/sead/odsele/proposta_governo/proposta_governo_2026_BR.zip | `.../2026/` |
+| 2 | Governadores 2026 | `.../proposta_governo_2026_{UF}.zip` | `.../2026/` |
+| 3 | Pres/Gov 2022 e 2018 | `proposta_governo_{AAAA}_BR.zip` (+ `_UF` gov) | `.../AAAA/` |
+| 4 | Prefeitos 2024/2020 | `proposta_governo_{AAAA}_{UF}.zip` (ZIPs grandes) | `.../AAAA/` |
+
+## Base 6 — Senado / leis (depois dos planos)
+
+Aguardando definição de fontes e ZIP; não bloqueia o Acervo de planos.
 
 ## Notas
 

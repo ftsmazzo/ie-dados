@@ -29,6 +29,10 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | get_populacao | cheap | exige município ou UF |
 | get_pib | cheap | PIB municipal IBGE; exige município ou UF; ano 2010–2023 |
 | get_idhm | cheap | IDHM Atlas; exige município ou UF; ano 1991/2000/2010 |
+| plano_search_meta | cheap | catálogo planos TSE; filtro `eleito` / cargo / ano |
+| plano_retrieve | medium | FTS no acervo (trechos + citação) |
+| plano_compare_tema | medium | mesmo tema em N planos (default só eleitos) |
+| plano_seed_ideia | medium | esqueleto a partir de eleitos; default Pres 2026 |
 | election_estimate | cheap | antes de agregações amplas |
 | election_aggregate | heavy | `group_by` + `metrics` obrigatórios |
 | finance_estimate | cheap | antes de agregações de receita/despesa |
@@ -83,6 +87,13 @@ Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
 3. `correlate` com `metric_x=rate_nulos_sobre_validos`, `metric_y=sum_validos`, mesmos filtros  
    — ou `metric_y=populacao`, `y_source=populacao`
 4. `series_compare` com `metric=rate_nulos_sobre_validos` para deltas YoY
+
+### Exemplo — planos de governo (Base 5 / Acervo)
+
+1. `plano_search_meta` `ano_eleicao=2026`, `cd_cargo=1`, `eleito=true` → Presidente atual  
+2. `plano_retrieve` `query="educação"`, mesmos filtros → trechos com citação  
+3. `plano_compare_tema` / `plano_seed_ideia` `tema="saúde"` (default Pres 2026 eleito)  
+4. Opcional: `get_pib` / `get_idhm` no município-alvo para contextualizar
 
 ### Exemplo — abstencão × PIB / IDHM (Base 4)
 

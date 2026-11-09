@@ -18,6 +18,7 @@ from ie_dados_mcp.tools import catalog as catalog_tools
 from ie_dados_mcp.tools import election as election_tools
 from ie_dados_mcp.tools import finance as finance_tools
 from ie_dados_mcp.tools import geo as geo_tools
+from ie_dados_mcp.tools import planos as planos_tools
 
 
 def _transport_security() -> TransportSecuritySettings:
@@ -82,10 +83,12 @@ def build_server() -> MCPServer:
             "Fluxo sugerido: list_domains → describe_domain → "
             "resolve_municipio → election_estimate → election_aggregate. "
             "Para séries/correlação: series_build → correlate / series_compare. "
+            "Planos de governo: plano_search_meta → plano_retrieve / "
+            "plano_compare_tema / plano_seed_ideia (Presidente atual = eleito 2026). "
             "Se vier artifact_id, use artifact_get. "
             "Nunca peça dump cru de votacao_candidato_munzona."
         ),
-        version="0.3.0",
+        version="0.4.0",
     )
 
     @mcp.custom_route("/health", methods=["GET"])
@@ -358,6 +361,98 @@ def build_server() -> MCPServer:
             sq_candidato=sq_candidato,
             max_rows=max_rows,
             force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="plano_search_meta",
+        description=planos_tools.plano_search_meta.__doc__ or "Metadados de planos.",
+    )
+    def plano_search_meta(
+        ano_eleicao: int | None = None,
+        cd_cargo: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        eleito: bool | None = None,
+        sq_candidato: int | None = None,
+        q: str | None = None,
+        limit: int = 30,
+    ) -> dict[str, Any]:
+        return planos_tools.plano_search_meta(
+            ano_eleicao=ano_eleicao,
+            cd_cargo=cd_cargo,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            eleito=eleito,
+            sq_candidato=sq_candidato,
+            q=q,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="plano_retrieve",
+        description=planos_tools.plano_retrieve.__doc__ or "Retrieve FTS de planos.",
+    )
+    def plano_retrieve(
+        query: str,
+        ano_eleicao: int | None = None,
+        cd_cargo: int | None = None,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        eleito: bool | None = None,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        return planos_tools.plano_retrieve(
+            query=query,
+            ano_eleicao=ano_eleicao,
+            cd_cargo=cd_cargo,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            eleito=eleito,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="plano_compare_tema",
+        description=planos_tools.plano_compare_tema.__doc__ or "Compara tema entre planos.",
+    )
+    def plano_compare_tema(
+        query: str,
+        ano_eleicao: int | None = None,
+        cd_cargo: int | None = None,
+        sg_uf: str | None = None,
+        only_eleito: bool = True,
+        max_planos: int = 5,
+        trechos_por_plano: int = 2,
+    ) -> dict[str, Any]:
+        return planos_tools.plano_compare_tema(
+            query=query,
+            ano_eleicao=ano_eleicao,
+            cd_cargo=cd_cargo,
+            sg_uf=sg_uf,
+            only_eleito=only_eleito,
+            max_planos=max_planos,
+            trechos_por_plano=trechos_por_plano,
+        )
+
+    @mcp.tool(
+        name="plano_seed_ideia",
+        description=planos_tools.plano_seed_ideia.__doc__ or "Seed de ideia a partir de eleitos.",
+    )
+    def plano_seed_ideia(
+        tema: str,
+        ano_eleicao: int | None = 2026,
+        cd_cargo: int | None = 1,
+        sg_uf: str | None = None,
+        id_municipio: str | None = None,
+        max_fontes: int = 5,
+    ) -> dict[str, Any]:
+        return planos_tools.plano_seed_ideia(
+            tema=tema,
+            ano_eleicao=ano_eleicao,
+            cd_cargo=cd_cargo,
+            sg_uf=sg_uf,
+            id_municipio=id_municipio,
+            max_fontes=max_fontes,
         )
 
     @mcp.tool(

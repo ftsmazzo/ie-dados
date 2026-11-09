@@ -288,6 +288,55 @@ DOMAINS: dict[str, dict] = {
             "source=paga|doador: filtre por ano_eleicao e/ou sg_uf.",
         ],
     },
+    "planos": {
+        "id": "planos",
+        "title": "Planos de Governo (Acervo RAG)",
+        "status": "em_andamento",
+        "cost": "medium",
+        "tables": {
+            "ref.plano_governo": {
+                "description": (
+                    "Catálogo de PDFs TSE proposta_governo. "
+                    "Todos candidatos executivos; flag eleito. "
+                    "Presidente atual = eleito 2026 (cd_cargo=1)."
+                ),
+                "keys": ["ano_eleicao", "sq_candidato", "arquivo_nome"],
+                "fields": [
+                    "id_plano",
+                    "ano_eleicao",
+                    "cd_cargo",
+                    "ds_cargo",
+                    "sg_uf",
+                    "id_municipio",
+                    "sq_candidato",
+                    "nm_candidato",
+                    "sg_partido",
+                    "eleito",
+                    "arquivo_nome",
+                    "n_chunks",
+                ],
+            },
+            "docs.plano_chunk": {
+                "description": "Chunks FTS (portuguese) do acervo; use plano_retrieve.",
+                "keys": ["id_plano", "chunk_ord"],
+                "fields": ["id_chunk", "id_plano", "chunk_ord", "secao", "texto"],
+            },
+        },
+        "recommended_tools": [
+            "plano_search_meta",
+            "plano_retrieve",
+            "plano_compare_tema",
+            "plano_seed_ideia",
+            "get_pib",
+            "get_idhm",
+        ],
+        "years_p0": [2018, 2020, 2022, 2024, 2026],
+        "notes": [
+            "cd_cargo: 1 Presidente, 3 Governador, 11 Prefeito.",
+            "eleito=true marca quem venceu; mandato presidencial atual = 2026.",
+            "Municipais: ZIPs por UF (grandes). Gerais BR são leves.",
+        ],
+    },
 }
 
 
