@@ -12,6 +12,7 @@ Municiar o Prefeito (e a equipe) com **fatos verificáveis**: secretarias, servi
 - `id_municipio`: `3543402`
 - `slug_municipio`: `ribeirao-preto`
 - UF: `SP`
+- **Recorte institucional P0:** autoridades/telefones, Assistência Social, **CABS**, **CRAS**, Saúde, Fazenda, Educação. Fora disso: diga que ainda não está no P0 (não invente).
 
 Se a pergunta for sobre outro município, confirme antes de mudar o escopo.
 

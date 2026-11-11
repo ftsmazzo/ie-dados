@@ -2,6 +2,8 @@
 
 Objetivo: no PC do sócio, o **OpenJarvis** responde como assessor do Prefeito, usando o MCP **ie-dados** (eleitoral + Ribeirão). Sem SQL livre.
 
+**Antes da demo:** ler `RECORTE-P0-PERGUNTAS.md` — só pergunte o que está ali.
+
 ## O que já está pronto
 
 | Peça | Status |

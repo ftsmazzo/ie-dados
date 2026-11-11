@@ -50,16 +50,52 @@ def chunk_text(text: str) -> list[str]:
     return chunks
 
 
+# prefixes conhecidos (mais longos primeiro) para servicos/{secretaria}-resto.md
+_SEC_PREFIXES = sorted(
+    [
+        "assistencia-social",
+        "controladoria-geral-municipio",
+        "coordenadoria-limpeza",
+        "canal-do-servidor",
+        "meio-ambiente",
+        "infraestrutura",
+        "planejamento",
+        "administracao",
+        "casa-civil",
+        "fundo-social",
+        "cidade-limpa",
+        "educacao",
+        "fazenda",
+        "saude",
+        "obras",
+        "saerp",
+        "rpmobi",
+        "cohab",
+        "coderp",
+        "procon",
+        "governo",
+        "justica",
+        "tecnologia",
+        "esportes",
+        "cidadania",
+    ],
+    key=len,
+    reverse=True,
+)
+
+
 def infer_tipo(rel: str) -> tuple[str, str | None]:
     rel = rel.replace("\\", "/")
     if rel.startswith("secretarias/"):
         slug = Path(rel).stem
         return "secretaria", slug
     if rel.startswith("servicos/"):
-        # servicos/{secretaria}-...
+        # servicos/{secretaria}-{servico}.md  ou  servicos/{secretaria}.md
         name = Path(rel).stem
-        sec = name.split("-", 1)[0] if "-" in name else None
-        return "servico", sec
+        for sec in _SEC_PREFIXES:
+            if name == sec or name.startswith(sec + "-"):
+                return "servico", sec
+        return "servico", None
     if rel.startswith("00-autoridades"):
         return "autoridade", None
     if rel == "README.md":
@@ -94,7 +130,8 @@ def load_municipio(cur, slug_mun: str, id_mun: str) -> dict:
     n_chunks = 0
     md_files = sorted(base.rglob("*.md"))
     for path in md_files:
-        if "_meta" in path.parts:
+        # ignora pastas internas (_meta, _scrape_bruto, …)
+        if any(part.startswith("_") for part in path.parts):
             continue
         rel = str(path.relative_to(base)).replace("\\", "/")
         text = path.read_text(encoding="utf-8")

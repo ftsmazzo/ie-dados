@@ -13,7 +13,7 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
 | 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **pronta** (carga + `get_pib`/`get_idhm` + `correlate` pib/idhm) |
 | 5 | Planos de Governo (Acervo RAG) | `data/raw/tse/planos_governo/` | TSE proposta_governo | `sq_candidato` + `ano` (+ `eleito`) | **P0 BR pronto** (2018/2022/2026 Pres indexados; UF municipais sob demanda) |
-| 6 | Acervo Municípios | `docs/acervos/municipios/` | Portais de prefeitura | `id_municipio` + `secretaria_slug` | **P0 Ribeirão Preto** (350 págs / 25 órgãos) |
+| 6 | Acervo Municípios | `docs/acervos/municipios/` | Portais de prefeitura | `id_municipio` + `secretaria_slug` | **P0 curado Ribeirão** (8 docs: CABS/CRAS/Saúde/Fazenda/Educação/contatos) |
 | 7 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
@@ -240,10 +240,10 @@ Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/
 - **Tabelas:** `docs.municipio_doc` + `docs.municipio_chunk` (`sql/008_acervo_municipio.sql`)
 - **Scripts:** `scrape_ribeirao_prefeitura.py` → MD; `load_acervo_municipio.py` → FTS
 - **MCP:** `mun_list`, `mun_list_secretarias`, `mun_get_secretaria`, `mun_retrieve`, `mun_search_servico`
-- **P0 coletado:** ~350 páginas, 25 órgãos/secretarias (Saúde, Fazenda, Educação, …)
-- **Carga FTS:** 37 docs / 200 chunks (`load_acervo_municipio.py`); smoke OK em Saúde/Fazenda/Educação + `mun_retrieve`/`mun_search_servico`
-- **Jarvis gabinete:** passo a passo PC do sócio em `docs/jarvis/` (MCP + persona Prefeito Ribeirão)
-- **Próximos municípios:** mesmo pipeline (scrape → MD → load)
+- **P0 curado (demo):** 8 docs / 11 chunks — CABS, CRAS, Saúde, Fazenda, Educação, autoridades/telefones
+- **Guia do que perguntar:** `docs/jarvis/RECORTE-P0-PERGUNTAS.md`
+- **Scrape bruto:** `_scrape_bruto/` (fora do FTS) — ampliar depois
+- **Jarvis gabinete:** `docs/jarvis/`
 
 ## Base 7 — Senado / leis (depois)
 
