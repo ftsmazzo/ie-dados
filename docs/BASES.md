@@ -242,6 +242,7 @@ Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/
 - **MCP:** `mun_list`, `mun_list_secretarias`, `mun_get_secretaria`, `mun_retrieve`, `mun_search_servico`
 - **P0 coletado:** ~350 páginas, 25 órgãos/secretarias (Saúde, Fazenda, Educação, …)
 - **Carga FTS:** 37 docs / 200 chunks (`load_acervo_municipio.py`); smoke OK em Saúde/Fazenda/Educação + `mun_retrieve`/`mun_search_servico`
+- **Jarvis gabinete:** passo a passo PC do sócio em `docs/jarvis/` (MCP + persona Prefeito Ribeirão)
 - **Próximos municípios:** mesmo pipeline (scrape → MD → load)
 
 ## Base 7 — Senado / leis (depois)
