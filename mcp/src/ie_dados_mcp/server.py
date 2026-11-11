@@ -18,6 +18,7 @@ from ie_dados_mcp.tools import catalog as catalog_tools
 from ie_dados_mcp.tools import election as election_tools
 from ie_dados_mcp.tools import finance as finance_tools
 from ie_dados_mcp.tools import geo as geo_tools
+from ie_dados_mcp.tools import municipios as municipios_tools
 from ie_dados_mcp.tools import planos as planos_tools
 
 
@@ -85,6 +86,8 @@ def build_server() -> MCPServer:
             "Para séries/correlação: series_build → correlate / series_compare. "
             "Planos de governo: plano_search_meta → plano_retrieve / "
             "plano_compare_tema / plano_seed_ideia (Presidente atual = eleito 2026). "
+            "Acervo município: mun_list → mun_list_secretarias → "
+            "mun_get_secretaria / mun_retrieve / mun_search_servico. "
             "Se vier artifact_id, use artifact_get. "
             "Nunca peça dump cru de votacao_candidato_munzona."
         ),
@@ -361,6 +364,86 @@ def build_server() -> MCPServer:
             sq_candidato=sq_candidato,
             max_rows=max_rows,
             force_artifact=force_artifact,
+        )
+
+    @mcp.tool(
+        name="mun_list",
+        description=municipios_tools.mun_list.__doc__ or "Lista municípios no acervo.",
+    )
+    def mun_list(limit: int = 50) -> dict[str, Any]:
+        return municipios_tools.mun_list(limit=limit)
+
+    @mcp.tool(
+        name="mun_list_secretarias",
+        description=municipios_tools.mun_list_secretarias.__doc__
+        or "Lista secretarias do município.",
+    )
+    def mun_list_secretarias(
+        id_municipio: str | None = None,
+        slug_municipio: str | None = None,
+    ) -> dict[str, Any]:
+        return municipios_tools.mun_list_secretarias(
+            id_municipio=id_municipio,
+            slug_municipio=slug_municipio,
+        )
+
+    @mcp.tool(
+        name="mun_get_secretaria",
+        description=municipios_tools.mun_get_secretaria.__doc__
+        or "Ficha de uma secretaria.",
+    )
+    def mun_get_secretaria(
+        secretaria_slug: str,
+        id_municipio: str | None = None,
+        slug_municipio: str | None = None,
+        trechos: int = 3,
+    ) -> dict[str, Any]:
+        return municipios_tools.mun_get_secretaria(
+            secretaria_slug=secretaria_slug,
+            id_municipio=id_municipio,
+            slug_municipio=slug_municipio,
+            trechos=trechos,
+        )
+
+    @mcp.tool(
+        name="mun_retrieve",
+        description=municipios_tools.mun_retrieve.__doc__ or "FTS acervo município.",
+    )
+    def mun_retrieve(
+        query: str,
+        id_municipio: str | None = None,
+        slug_municipio: str | None = None,
+        secretaria_slug: str | None = None,
+        tipo: str | None = None,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        return municipios_tools.mun_retrieve(
+            query=query,
+            id_municipio=id_municipio,
+            slug_municipio=slug_municipio,
+            secretaria_slug=secretaria_slug,
+            tipo=tipo,
+            limit=limit,
+        )
+
+    @mcp.tool(
+        name="mun_search_servico",
+        description=municipios_tools.mun_search_servico.__doc__
+        or "Busca serviços municipais.",
+    )
+    def mun_search_servico(
+        query: str,
+        id_municipio: str | None = None,
+        slug_municipio: str | None = None,
+        secretaria_slug: str | None = None,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        return municipios_tools.mun_search_servico(
+            query=query,
+            id_municipio=id_municipio,
+            slug_municipio=slug_municipio,
+            secretaria_slug=secretaria_slug,
+            limit=limit,
         )
 
     @mcp.tool(

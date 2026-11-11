@@ -288,6 +288,49 @@ DOMAINS: dict[str, dict] = {
             "source=paga|doador: filtre por ano_eleicao e/ou sg_uf.",
         ],
     },
+    "municipios": {
+        "id": "municipios",
+        "title": "Acervo Municípios (portal institucional)",
+        "status": "em_andamento",
+        "cost": "medium",
+        "tables": {
+            "docs.municipio_doc": {
+                "description": (
+                    "Catálogo de páginas/MD por município e secretaria. "
+                    "P0: Ribeirão Preto (id_municipio=3543402)."
+                ),
+                "keys": ["id_municipio", "path_md"],
+                "fields": [
+                    "id_doc",
+                    "id_municipio",
+                    "slug_municipio",
+                    "secretaria_slug",
+                    "tipo",
+                    "titulo",
+                    "path_md",
+                    "url_fonte",
+                    "n_chunks",
+                ],
+            },
+            "docs.municipio_chunk": {
+                "description": "Chunks FTS portuguese; use mun_retrieve / mun_search_servico.",
+                "keys": ["id_doc", "chunk_ord"],
+                "fields": ["id_chunk", "id_doc", "chunk_ord", "secao", "texto"],
+            },
+        },
+        "recommended_tools": [
+            "mun_list",
+            "mun_list_secretarias",
+            "mun_get_secretaria",
+            "mun_retrieve",
+            "mun_search_servico",
+        ],
+        "notes": [
+            "Sempre informe id_municipio ou slug_municipio.",
+            "Ribeirão Preto: slug=ribeirao-preto / 3543402.",
+            "Outros municípios: mesmo pipeline scrape→MD→load.",
+        ],
+    },
     "planos": {
         "id": "planos",
         "title": "Planos de Governo (Acervo RAG)",

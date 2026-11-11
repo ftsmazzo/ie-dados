@@ -29,6 +29,11 @@ MCP endpoint: `POST /mcp` (streamable HTTP)
 | get_populacao | cheap | exige município ou UF |
 | get_pib | cheap | PIB municipal IBGE; exige município ou UF; ano 2010–2023 |
 | get_idhm | cheap | IDHM Atlas; exige município ou UF; ano 1991/2000/2010 |
+| mun_list | cheap | municípios no Acervo Municípios |
+| mun_list_secretarias | cheap | secretarias de um município |
+| mun_get_secretaria | cheap | ficha + trechos de uma secretaria |
+| mun_retrieve | medium | FTS institucional (exige município) |
+| mun_search_servico | medium | atalho FTS tipo=servico |
 | plano_search_meta | cheap | catálogo planos TSE; filtro `eleito` / cargo / ano |
 | plano_retrieve | medium | FTS no acervo (trechos + citação) |
 | plano_compare_tema | medium | mesmo tema em N planos (default só eleitos) |
@@ -94,6 +99,13 @@ Metrics votação: `sum_votos`, `sum_votos_validos`, `n_linhas`.
 2. `plano_retrieve` `query="educação"`, mesmos filtros → trechos com citação  
 3. `plano_compare_tema` / `plano_seed_ideia` `tema="saúde"` (default Pres 2026 eleito)  
 4. Opcional: `get_pib` / `get_idhm` no município-alvo para contextualizar
+
+### Exemplo — Acervo Municípios (Base 6 / Ribeirão Preto)
+
+1. `mun_list` → municípios no acervo  
+2. `mun_list_secretarias` `slug_municipio=ribeirao-preto` (ou `id_municipio=3543402`)  
+3. `mun_get_secretaria` `secretaria_slug=saude` + mesmo escopo → ficha + trechos  
+4. `mun_retrieve` `query="UBS"` / `mun_search_servico` `query="IPTU"` — sempre com município
 
 ### Exemplo — abstencão × PIB / IDHM (Base 4)
 

@@ -32,6 +32,8 @@ data/raw/tse/planos_governo/*
 !data/raw/tse/consulta_cand/
 data/raw/tse/consulta_cand/*
 !data/raw/tse/consulta_cand/README.md
+!data/raw/acervos/
+data/raw/acervos/**
 
 data/processed/*
 !data/processed/.gitkeep

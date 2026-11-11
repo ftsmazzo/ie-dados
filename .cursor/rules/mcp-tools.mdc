@@ -1,0 +1,36 @@
+﻿---
+description: Convenção das tools MCP tipadas do ie-dados (domínios, prefixos, anti-token)
+globs: mcp/**/*
+alwaysApply: false
+---
+
+# MCP ie-dados — tools tipadas
+
+Sem SQL livre. Toda base nova entra como **domínio** + tools com prefixo curto.
+
+## Checklist ao adicionar domínio
+
+1. `mcp/src/ie_dados_mcp/tools/<dominio>.py` — funções tipadas + docstring `WHEN TO USE` / `WHEN NOT TO USE`
+2. Registrar no `server.py` (wrappers FastMCP)
+3. Entrada em `catalog.py` (`list_domains` / `describe_domain`) com tables, keys, `recommended_tools`
+4. Linha na tabela de `mcp/README.md` + exemplo curto do fluxo
+5. Escopo anti-token obrigatório (`id_municipio` / `sg_uf` / `ano_eleicao` / slug do acervo)
+
+## Prefixos atuais
+
+| Prefixo | Domínio |
+|---------|---------|
+| (geo) | `resolve_municipio`, `get_populacao`, `get_pib`, `get_idhm` |
+| `election_` / `finance_` | urnas e prestação |
+| `series_` / `correlate` | analytics |
+| `plano_` | Acervo Planos de Governo |
+| `mun_` | Acervo Municípios |
+| `artifact_` | paginação de resultados grandes |
+
+## Custo
+
+Marcar `cheap` | `medium` | `heavy` no README e no retorno (`cost`). Estimate antes de aggregate quando o volume puder explodir.
+
+## Acervos RAG
+
+Padrão: scrape/raw → MD em `docs/acervos/...` → `sql/00N_*.sql` + loader → FTS → tools tipadas com citação de fonte.

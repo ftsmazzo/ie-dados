@@ -13,7 +13,8 @@ Legado (`inteligencia-eleitoral*`, Postgres `iebrasil`, etc.): **fora de escopo*
 | 3 | Financiamento / prestação | `data/raw/tse/prestacao/` | TSE ASEPA | `sq_candidato` + `ano` (+ município quando houver) | **pronta (P0)** |
 | 4 | Indicadores socioeconômicos | `data/raw/ibge/pib_municipios/` + `data/raw/atlas/idhm/` | IBGE + Atlas/PNUD | `id_municipio` + `ano` | **pronta** (carga + `get_pib`/`get_idhm` + `correlate` pib/idhm) |
 | 5 | Planos de Governo (Acervo RAG) | `data/raw/tse/planos_governo/` | TSE proposta_governo | `sq_candidato` + `ano` (+ `eleito`) | **P0 BR pronto** (2018/2022/2026 Pres indexados; UF municipais sob demanda) |
-| 6 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP (depois dos planos) |
+| 6 | Acervo Municípios | `docs/acervos/municipios/` | Portais de prefeitura | `id_municipio` + `secretaria_slug` | **P0 Ribeirão Preto** (350 págs / 25 órgãos) |
+| 7 | Senado / leis | `data/raw/congresso/` | fontes oficiais | a definir | aguardando ZIP |
 
 ## Base 1 — Municípios + população (pronta)
 
@@ -231,9 +232,21 @@ Portal PIB: [IBGE — PIB dos Municípios](https://www.ibge.gov.br/estatisticas/
 | 3 | Pres/Gov 2022 e 2018 | `proposta_governo_{AAAA}_BR.zip` (+ `_UF` gov) | `.../AAAA/` |
 | 4 | Prefeitos 2024/2020 | `proposta_governo_{AAAA}_{UF}.zip` (ZIPs grandes) | `.../AAAA/` |
 
-## Base 6 — Senado / leis (depois dos planos)
+## Base 6 — Acervo Municípios (Ribeirão Preto P0)
 
-Aguardando definição de fontes e ZIP; não bloqueia o Acervo de planos.
+- **Objetivo:** RAG institucional por município (secretarias, serviços, contatos) para IA responder com citação
+- **Hierarquia:** `docs/acervos/municipios/{slug}/` — primeiro `ribeirao-preto` (`id_municipio=3543402`)
+- **Fonte:** [portal Prefeitura Ribeirão Preto](https://www.ribeiraopreto.sp.gov.br/portal/)
+- **Tabelas:** `docs.municipio_doc` + `docs.municipio_chunk` (`sql/008_acervo_municipio.sql`)
+- **Scripts:** `scrape_ribeirao_prefeitura.py` → MD; `load_acervo_municipio.py` → FTS
+- **MCP:** `mun_list`, `mun_list_secretarias`, `mun_get_secretaria`, `mun_retrieve`, `mun_search_servico`
+- **P0 coletado:** ~350 páginas, 25 órgãos/secretarias (Saúde, Fazenda, Educação, …)
+- **Carga FTS:** 37 docs / 200 chunks (`load_acervo_municipio.py`); smoke OK em Saúde/Fazenda/Educação + `mun_retrieve`/`mun_search_servico`
+- **Próximos municípios:** mesmo pipeline (scrape → MD → load)
+
+## Base 7 — Senado / leis (depois)
+
+Aguardando definição de fontes e ZIP.
 
 ## Notas
 
