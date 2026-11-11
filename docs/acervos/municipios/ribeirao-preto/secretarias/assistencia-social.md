@@ -5,10 +5,16 @@ _Município:_ Ribeirão Preto (SP) · `id_municipio=3543402`
 ## Ficha
 
 - **Secretário (página da secretaria):** Dr. Maurício Godinho
-- **Endereço:** Rua Prudente de Morais, 457 — Centro
+- **Endereço da sede SEMAS:** Rua Prudente de Morais, 457 — Centro
 - **Horário:** segunda a sexta, 8h–12h e 13h–17h
 - **Telefone:** (16) 3611-6000
 - **E-mail gabinete:** gabinete.semas@rp.ribeiraopreto.sp.gov.br
+
+## Anti-confusão (obrigatório)
+
+- Sede da **Secretaria / SEMAS** = **Prudente de Morais, 457** (mesmo prédio da CABS).
+- **Rua São José, 223** = endereço do **CRAS 1** (unidade de atendimento), **não** é a sede da Secretaria.
+- Não misturar lista de CRAS com sede da pasta.
 
 ## Serviços P0 neste acervo
 

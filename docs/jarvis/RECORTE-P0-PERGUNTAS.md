@@ -32,6 +32,12 @@ Se a pergunta **não** estiver nesta lista → diga: *“ainda não está no rec
 - “Qual escola do meu bairro tem vaga?”
 - Qualquer secretaria fora de: Assistência / Saúde / Fazenda / Educação (+ contatos gerais)
 
+### Confusões já vistas (corrigir)
+
+- Secretário da Saúde = **Maurício Godinho** (não inventar outro nome).
+- Sede SEMAS = **Prudente de Morais, 457** — **não** Rua São José (São José = CRAS 1).
+- Godinho nas duas pastas (Saúde + Assistência) é **correto** no portal; endereços das pastas são diferentes.
+
 ---
 
 ## B) Dados numéricos (já no MCP, seguros)

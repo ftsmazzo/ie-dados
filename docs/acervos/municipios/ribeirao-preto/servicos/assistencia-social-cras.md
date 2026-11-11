@@ -6,6 +6,12 @@ _Município:_ Ribeirão Preto (SP) · `id_municipio=3543402` · `secretaria_slug
 
 Unidade pública de **Proteção Social Básica (SUAS)**. Porta de entrada comunitária; principal serviço: **PAIF** (acompanhamento familiar, orientação, grupos e oficinas). Há unidades nas regiões Central, Sul, Norte, Noroeste, Sudoeste e Bonfim Paulista.
 
+## Anti-confusão (obrigatório)
+
+- Endereços abaixo são de **unidades CRAS**, não da sede da Secretaria.
+- Sede SEMAS / CABS = **Rua Prudente de Morais, 457** (ver ficha da secretaria / CABS).
+- **Rua São José, 223** = só **CRAS 1** (região Central).
+
 ## Unidades (portal)
 
 | Unidade | Região | Endereço | Telefone(s) | Horário |

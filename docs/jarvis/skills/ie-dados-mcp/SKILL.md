@@ -55,6 +55,9 @@ Se a tool falhar com 401: token/URL errados. Se falhar com vazio: escopo P0 ou f
 - **CABS / benefícios / CadÚnico** → `mun_search_servico` com query `CABS` ou `CadÚnico`.
 - **CRAS** → `mun_search_servico` / `mun_retrieve` com `CRAS`.
 - `mun_search_servico` filtra só `tipo=servico`; se vier `n=0`, tente `mun_retrieve` sem filtro de tipo.
+- **Nomes de titulares:** use **somente** o nome devolvido pela tool. Se a tool diz Godinho, não “completar” com outro nome da memória/treino.
+- **SEMAS ≠ CRAS:** sede da Assistência = **Prudente de Morais, 457**. **São José, 223** = só CRAS 1.
+- **Saúde ≠ SEMAS:** sede da Saúde = **Duque de Caxias, 675**. Mesmo secretário (Godinho) nas duas pastas é **fato do portal**, não motivo para trocar endereços.
 
 ## P0 institucional (Ribeirão) — o que existe de verdade
 
@@ -73,11 +76,17 @@ Fora disso (todas as UBS, 2ª via IPTU passo a passo, escolas por bairro, outras
 | Pergunta | Esperado |
 |----------|----------|
 | Telefone do Prefeito | (16) 3977-9000 |
+| Secretário da Saúde | **Dr. Maurício Godinho** + Duque de Caxias, 675 + (16) 3977-9300 |
+| Sede da Assistência Social | **Prudente de Morais, 457** (não São José) |
 | CABS / agendar | Prudente de Morais, 457; (16) 3605-2800; CadÚnico |
-| Saúde | (16) 3977-9300; Duque de Caxias, 675 |
 | Fazenda presencial | Poupatempo Av. Pres. Kennedy, 1500 |
 | Educação | (16) 3977-9100; Av. Treze de Maio, 157 |
-| CRAS Central | CRAS 1 — Rua São José, 223 |
+| CRAS Central | CRAS 1 — Rua São José, 223 (**só** se perguntarem CRAS) |
+
+### Erros já vistos (proibidos)
+
+- Inventar titular da Saúde (ex. “Luiz Carlos de Oliveira”) — **não existe no acervo**.
+- Dizer que a Assistência Social fica na Rua São José — isso é **CRAS 1**, não a SEMAS.
 
 ## Parâmetros frequentes
 
