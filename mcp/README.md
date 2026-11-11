@@ -14,7 +14,11 @@ Servidor MCP tipado sobre o Postgres `iedados`. Sem SQL livre. Consultas grandes
 
 ## Auth
 
-Header: `Authorization: Bearer <MCP_TOKEN>`
+Qualquer uma destas formas (mesmo `MCP_TOKEN`):
+
+1. Header: `Authorization: Bearer <MCP_TOKEN>`
+2. Query: `POST /mcp?token=<MCP_TOKEN>`
+3. Path (estilo OpenJarvis / Home Assistant, **sem header**): `POST /key/<MCP_TOKEN>/mcp`
 
 Rotas públicas: `GET /health`, `GET /health/ready`  
 MCP endpoint: `POST /mcp` (streamable HTTP)
@@ -73,7 +77,8 @@ App EasyPanel `ie-dados` / serviço `mcp`, build a partir de `/mcp` no repo.
 
 - URL: `https://ie-dados-mcp.kxryyk.easypanel.host`
 - Health: `GET /health` (público)
-- MCP: `POST /mcp` com `Authorization: Bearer <MCP_TOKEN>`
+- MCP (Bearer): `POST /mcp` + `Authorization: Bearer <MCP_TOKEN>`
+- MCP (sem header): `POST /key/<MCP_TOKEN>/mcp` — usar essa URL no OpenJarvis
 - Opcional: `MCP_ALLOWED_HOSTS=ie-dados-mcp.kxryyk.easypanel.host` para reativar checagem de Host
 
 ### Exemplo — votos por partido (Campinas / Dep. Estadual 2022)

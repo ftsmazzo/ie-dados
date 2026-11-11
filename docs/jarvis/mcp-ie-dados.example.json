@@ -6,6 +6,11 @@
       "headers": {
         "Authorization": "Bearer COLE_O_MCP_TOKEN_AQUI"
       }
+    },
+    "ie-dados-url-token": {
+      "type": "http",
+      "url": "https://ie-dados-mcp.kxryyk.easypanel.host/key/COLE_O_MCP_TOKEN_AQUI/mcp",
+      "headers": {}
     }
   }
 }

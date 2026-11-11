@@ -53,23 +53,66 @@ def _mcp_token() -> str:
 
 
 class BearerAuthMiddleware(BaseHTTPMiddleware):
-    """Exige Authorization: Bearer <MCP_TOKEN> em /mcp*; libera /health*."""
+    """Auth em /mcp* (libera /health*): Bearer, ?token=, ou path /key/<token>/...
+
+    Path /key/<token>/mcp espelha o estilo OpenJarvis/Home Assistant (URL sem header).
+    """
 
     def __init__(self, app: ASGIApp, token: str) -> None:
         super().__init__(app)
         self.token = token
 
+    def _token_ok(self, got: str | None) -> bool:
+        if not got:
+            return False
+        try:
+            return secrets.compare_digest(got, self.token)
+        except (TypeError, ValueError):
+            return False
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
         if path.startswith("/health"):
             return await call_next(request)
+
+        # /key/<token>/rest → reescreve para /rest (auth na URL, sem header)
+        if path.startswith("/key/"):
+            parts = path.split("/", 3)  # ['', 'key', token, rest?]
+            if len(parts) < 3 or not parts[2]:
+                return JSONResponse({"error": "missing_path_token"}, status_code=401)
+            path_token = parts[2]
+            if not self._token_ok(path_token):
+                return JSONResponse({"error": "invalid_token"}, status_code=401)
+            rest = "/" + parts[3] if len(parts) > 3 and parts[3] else "/"
+            request.scope["path"] = rest
+            if "raw_path" in request.scope:
+                q = request.url.query
+                raw = rest.encode("utf-8")
+                if q:
+                    raw = raw + b"?" + q.encode("utf-8")
+                request.scope["raw_path"] = raw
+            return await call_next(request)
+
         auth = request.headers.get("authorization", "")
-        if not auth.lower().startswith("bearer "):
-            return JSONResponse({"error": "missing_bearer"}, status_code=401)
-        got = auth.split(" ", 1)[1].strip()
-        if not secrets.compare_digest(got, self.token):
+        if auth.lower().startswith("bearer "):
+            got = auth.split(" ", 1)[1].strip()
+            if self._token_ok(got):
+                return await call_next(request)
             return JSONResponse({"error": "invalid_token"}, status_code=401)
-        return await call_next(request)
+
+        # ?token= / ?access_token= (clientes que só aceitam URL)
+        q = request.query_params
+        qtok = q.get("token") or q.get("access_token")
+        if self._token_ok(qtok):
+            return await call_next(request)
+
+        return JSONResponse(
+            {
+                "error": "missing_auth",
+                "hint": "Bearer, ?token=, or /key/<MCP_TOKEN>/mcp",
+            },
+            status_code=401,
+        )
 
 
 def build_server() -> MCPServer:
