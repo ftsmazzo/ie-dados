@@ -70,13 +70,15 @@ Colar `persona-assessor-prefeito.md` nas instruções / memória do Jarvis (ou `
 
 Rodar `smoke-perguntas.md` (Saúde, IPTU, PIB, votos).
 
-### 5) Claude Code / Cursor (opcional, mesmo MCP)
+### 5) Claude Desktop / Cursor (mesmo MCP)
 
-Útil para debug e para testar tools com modelo forte:
-
-- Claude Code: `mcpServers` em `%USERPROFILE%\.claude.json`
+- **Claude Desktop (app):**  
+  `C:\Users\anjo_\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\claude_desktop_config.json`  
+  Padrão desta máquina: `npx mcp-remote` + URL `/key/<token>/mcp` (sem header).  
+  Depois de editar: **fechar e reabrir o Claude**.
 - Cursor: `%USERPROFILE%\.cursor\mcp.json`
-- Template: `mcp-ie-dados.example.json` (Bearer **ou** URL `/key/.../mcp`)
+- Claude Code CLI: `%USERPROFILE%\.claude.json` (é outro app — não é o Desktop)
+- Templates: `openjarvis-mcp.example.json`, `mcp-ie-dados.example.json`, `claude-desktop-ie-dados.example.json`
 
 ---
 
