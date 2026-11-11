@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ie-dados": {
+      "type": "http",
+      "url": "https://ie-dados-mcp.kxryyk.easypanel.host/mcp",
+      "headers": {
+        "Authorization": "Bearer COLE_O_MCP_TOKEN_AQUI"
+      }
+    }
+  }
+}
